@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#166534">
+  <link rel="manifest" href="manifest.json">
+  <title>Sistema Patrimonial y Almacén - RECICLA MPCP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
+    .tab-active { border-bottom: 3px solid #15803d; color: #15803d; font-weight: 700; background-color: #f0fdf4; }
+    #reader video { border-radius: 0.5rem; width: 100% !important; height: auto !important; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- PANTALLA DE LOGIN (SIN BOTÓN URL API) -->
+  <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-green-800 to-emerald-950 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 mb-3">
+          <i class="fas fa-recycle text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">PROGRAMA RECICLA</h1>
+        <p class="text-sm text-gray-500">Control Patrimonial SIGA y Almacén - MPCP</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Usuario</label>
+          <input type="text" id="loginUser" placeholder="Ingresa tu usuario" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Contraseña</label>
+          <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter') iniciarSesion()" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600">
+        </div>
+        <p id="loginError" class="text-red-600 text-sm hidden text-center font-medium"></p>
+        <button onclick="iniciarSesion()" id="btnLogin" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-lg shadow transition">
+          INGRESAR AL SISTEMA
+        </button>
+      </div>
+      <div class="mt-6 text-xs text-gray-400 text-center">
+        Municipalidad Provincial de Coronel Portillo
+      </div>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL -->
+  <div id="appScreen" class="hidden flex-1 flex flex-col">
+    <!-- HEADER -->
+    <header class="bg-green-800 text-white shadow-md px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-boxes-stacked text-2xl text-green-300"></i>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">SISTEMA PATRIMONIAL Y ALMACÉN</h1>
+          <p class="text-xs text-green-200">Programa Segregación en la Fuente - Callería</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="abrirModalScanner()" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
+          <i class="fas fa-qrcode text-base"></i> Escanear Bien / SKU
+        </button>
+        <button onclick="cargarDatos(true)" class="bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm" title="Sincronizar Datos">
+          <i class="fas fa-rotate" id="iconSync"></i>
+        </button>
+        <div class="text-right hidden sm:block ml-2">
+          <div id="userNameDisplay" class="text-sm font-bold"></div>
+          <div id="userRoleDisplay" class="text-xs text-green-300"></div>
+        </div>
+        <button onclick="cerrarSesion()" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-sm" title="Cerrar Sesión">
+          <i class="fas fa-power-off"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- NAVEGACIÓN -->
+    <nav class="bg-white shadow-sm border-b flex overflow-x-auto text-sm">
+      <button onclick="cambiarTab('dashboard')" id="tab-dashboard" class="px-5 py-3 tab-active whitespace-nowrap"><i class="fas fa-chart-pie mr-2"></i>Dashboard</button>
+      <button onclick="cambiarTab('patrimonio')" id="tab-patrimonio" class="px-5 py-3 text-gray-600 whitespace-nowrap"><i class="fas fa-truck-pickup mr-2"></i>Bienes Patrimoniales (SIGA)</button>
+      <button onclick="cambiarTab('almacen')" id="tab-almacen" class="px-5 py-3 text-gray-600 whitespace-nowrap"><i class="fas fa-warehouse mr-2"></i>Almacén de Materiales</button>
+      <button onclick="cambiarTab('movimientos')" id="tab-movimientos" class="px-5 py-3 text-gray-600 whitespace-nowrap"><i class="fas fa-exchange-alt mr-2"></i>Registrar Movimiento</button>
+      <button onclick="cambiarTab('historial')" id="tab-historial" class="px-5 py-3 text-gray-600 whitespace-nowrap"><i class="fas fa-clock-rotate-left mr-2"></i>Kardex General</button>
+      <button onclick="cambiarTab('usuarios')" id="tab-usuarios" class="px-5 py-3 text-gray-600 whitespace-nowrap hidden"><i class="fas fa-users-gear mr-2"></i>Usuarios (Solo Master)</button>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <main class="p-4 max-w-7xl w-full mx-auto flex-1 space-y-6">
+
+      <!-- 1. DASHBOARD -->
+      <section id="sec-dashboard" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-600">
+            <div class="text-xs text-gray-500 uppercase font-bold">Total Bienes SIGA</div>
+            <div id="kpi-total-patrimonio" class="text-3xl font-extrabold text-gray-800 mt-1">0</div>
+            <div class="text-xs text-gray-400 mt-1">Uso compartido entre áreas</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-amber-500">
+            <div class="text-xs text-gray-500 uppercase font-bold">Bienes Estado Regular/Malo</div>
+            <div id="kpi-alerta-patrimonio" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
+            <div class="text-xs text-gray-400 mt-1">Requieren mantenimiento</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-600">
+            <div class="text-xs text-gray-500 uppercase font-bold">Ítems en Almacén</div>
+            <div id="kpi-total-materiales" class="text-3xl font-extrabold text-gray-800 mt-1">0</div>
+            <div class="text-xs text-gray-400 mt-1">Herramientas y consumibles</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-600">
+            <div class="text-xs text-gray-500 uppercase font-bold">Alerta Stock Bajo</div>
+            <div id="kpi-alerta-stock" class="text-3xl font-extrabold text-red-600 mt-1">0</div>
+            <div class="text-xs text-gray-400 mt-1">Materiales por agotar</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="font-bold text-gray-700 border-b pb-2 mb-3"><i class="fas fa-triangle-exclamation text-red-500 mr-2"></i>Materiales con Stock Crítico</h3>
+            <div id="listaAlertasStock" class="space-y-2 text-sm"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="font-bold text-gray-700 border-b pb-2 mb-3"><i class="fas fa-screwdriver-wrench text-amber-500 mr-2"></i>Bienes Patrimoniales Observados (Regular / Malo)</h3>
+            <div id="listaAlertasPatrimonio" class="space-y-2 text-sm max-h-64 overflow-y-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. BIENES PATRIMONIALES (SIGA) -->
+      <section id="sec-patrimonio" class="hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow flex flex-wrap justify-between items-center gap-3">
+          <div class="flex flex-wrap gap-2 flex-1">
+            <input type="text" id="buscarPatrimonio" oninput="renderizarPatrimonio()" placeholder="Buscar por código SIGA, placa, descripción o responsable..." class="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[240px]">
+            <select id="filtroEstadoPatrimonio" onchange="renderizarPatrimonio()" class="border rounded-lg px-3 py-2 text-sm">
+              <option value="">Todos los Estados</option>
+              <option value="Bueno">Bueno</option>
+              <option value="Regular">Regular</option>
+              <option value="Malo">Malo</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="imprimirLoteQR('PATRIMONIO')" class="bg-purple-700 hover:bg-purple-800 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-1.5">
+              <i class="fas fa-print"></i> Imprimir QRs (A4)
+            </button>
+            <button id="btnNuevoPatrimonio" onclick="mostrarModalNuevoPatrimonio()" class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-bold hidden">
+              <i class="fas fa-plus mr-1"></i> Nuevo Bien SIGA
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg text-xs flex items-center gap-2">
+          <i class="fas fa-circle-info text-base"></i>
+          <span><b>Tip:</b> Haz clic sobre la <b>Descripción</b> para ver el historial de uso, o en el botón <b>QR</b> para ver y descargar su etiqueta.</span>
+        </div>
+
+        <div class="bg-white rounded-xl shadow overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                <th class="p-3">Cód. Patrimonial</th>
+                <th class="p-3">Descripción (Clic para Historial)</th>
+                <th class="p-3">Marca / Modelo / Placa</th>
+                <th class="p-3">Ubicación Física</th>
+                <th class="p-3">Estado</th>
+                <th class="p-3">Último Responsable</th>
+                <th class="p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaPatrimonio" class="divide-y"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. ALMACÉN DE MATERIALES -->
+      <section id="sec-almacen" class="hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow flex flex-wrap justify-between items-center gap-3">
+          <div class="flex flex-wrap gap-2 flex-1">
+            <input type="text" id="buscarMaterial" oninput="renderizarMateriales()" placeholder="Buscar material, bolsa, clavo, herramienta..." class="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[240px]">
+            <select id="filtroCatMaterial" onchange="renderizarMateriales()" class="border rounded-lg px-3 py-2 text-sm">
+              <option value="">Todas las Categorías</option>
+              <option value="Consumibles">Consumibles</option>
+              <option value="Herramientas">Herramientas</option>
+              <option value="Ferretería">Ferretería</option>
+              <option value="Insumos">Insumos</option>
+              <option value="Materiales">Materiales</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="imprimirLoteQR('MATERIAL')" class="bg-purple-700 hover:bg-purple-800 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-1.5">
+              <i class="fas fa-print"></i> Imprimir QRs Almacén (A4)
+            </button>
+            <button id="btnNuevoMaterial" onclick="mostrarModalNuevoMaterial()" class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-bold hidden">
+              <i class="fas fa-plus mr-1"></i> Crear Material SKU
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-lg text-xs flex items-center gap-2">
+          <i class="fas fa-circle-info text-base"></i>
+          <span><b>Tip:</b> Haz clic sobre el nombre del <b>Material / Insumo</b> para ver sus últimos 20 movimientos, o en <b>QR</b> para descargar su etiqueta.</span>
+        </div>
+
+        <div class="bg-white rounded-xl shadow overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                <th class="p-3">SKU</th>
+                <th class="p-3">Material / Insumo (Clic para Historial)</th>
+                <th class="p-3">Categoría</th>
+                <th class="p-3">Ubicación Almacén</th>
+                <th class="p-3">Stock Actual</th>
+                <th class="p-3">Stock Mín.</th>
+                <th class="p-3">Unidad</th>
+                <th class="p-3">Estatus</th>
+                <th class="p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaMateriales" class="divide-y"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. REGISTRAR MOVIMIENTO -->
+      <section id="sec-movimientos" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="cardMovMaterial" class="bg-white p-5 rounded-xl shadow space-y-4 border-t-4 border-green-700">
+          <h3 class="font-bold text-gray-800 text-base"><i class="fas fa-dolly text-green-700 mr-2"></i>Movimiento de Almacén (Materiales y Herramientas)</h3>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Seleccionar Material (SKU)</label>
+            <select id="movMatCodigo" class="w-full border rounded-lg p-2.5 text-sm"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Tipo de Operación</label>
+              <select id="movMatAccion" class="w-full border rounded-lg p-2.5 text-sm">
+                <option value="SALIDA A OPERACIÓN">SALIDA A OPERACIÓN (-)</option>
+                <option value="INGRESO A ALMACÉN">INGRESO A ALMACÉN (+)</option>
+                <option value="DEVOLUCIÓN A ALMACÉN">DEVOLUCIÓN A ALMACÉN (+)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Cantidad</label>
+              <input type="number" id="movMatCantidad" min="1" value="1" class="w-full border rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Área que solicita / usa</label>
+              <select id="movMatArea" class="w-full border rounded-lg p-2.5 text-sm">
+                <option value="Puntos Críticos">Puntos Críticos</option>
+                <option value="Orgánicos">Orgánicos</option>
+                <option value="Inorgánicos">Inorgánicos</option>
+                <option value="Almacén General">Almacén General</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Supervisor a Cargo</label>
+              <input type="text" id="movMatSupervisor" class="w-full border rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Personal / Operarios que usarán el material</label>
+            <input type="text" id="movMatPersonal" placeholder="Ej: Operario Juan Pérez / Cuadrilla 1" class="w-full border rounded-lg p-2.5 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Observación / Actividad o Punto Crítico</label>
+            <input type="text" id="movMatObs" placeholder="Ej: Limpieza Punto Crítico Av. Sáenz Peña" class="w-full border rounded-lg p-2.5 text-sm">
+          </div>
+          <button onclick="guardarMovimientoMaterial()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2.5 rounded-lg shadow">
+            GUARDAR MOVIMIENTO DE MATERIAL
+          </button>
+        </div>
+
+        <div id="cardMovPatrimonio" class="bg-white p-5 rounded-xl shadow space-y-4 border-t-4 border-blue-700">
+          <h3 class="font-bold text-gray-800 text-base"><i class="fas fa-clipboard-check text-blue-700 mr-2"></i>Uso y Control de Bien Patrimonial (SIGA)</h3>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Seleccionar Bien Patrimonial (SIGA)</label>
+            <select id="movPatCodigo" onchange="cargarDetallePatrimonio()" class="w-full border rounded-lg p-2.5 text-sm"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Acción / Reporte</label>
+              <select id="movPatAccion" class="w-full border rounded-lg p-2.5 text-sm">
+                <option value="SALIDA A CAMPO / TURNO">SALIDA A CAMPO / TURNO</option>
+                <option value="RETORNO / GUARDADO">RETORNO / GUARDADO</option>
+                <option value="REPORTE DE ESTADO FÍSICO">REPORTE DE ESTADO FÍSICO</option>
+                <option value="CAMBIO DE SEDE">CAMBIO DE SEDE</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Estado de Conservación</label>
+              <select id="movPatEstado" class="w-full border rounded-lg p-2.5 text-sm">
+                <option value="Bueno">Bueno</option>
+                <option value="Regular">Regular</option>
+                <option value="Malo">Malo</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Área que lo utiliza hoy</label>
+              <select id="movPatArea" class="w-full border rounded-lg p-2.5 text-sm">
+                <option value="Inorgánicos">Inorgánicos</option>
+                <option value="Orgánicos">Orgánicos</option>
+                <option value="Puntos Críticos">Puntos Críticos</option>
+                <option value="Administración">Administración</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Ubicación Física / Sede</label>
+              <select id="movPatUbicacion" class="w-full border rounded-lg p-2.5 text-sm">
+                <option value="POLVOS VERDES">POLVOS VERDES (Maestranza)</option>
+                <option value="CENTRO INTEGRAL DEL ADULTO MAYOR">CENTRO INTEGRAL ADULTO MAYOR</option>
+                <option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option>
+                <option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Supervisor a Cargo</label>
+              <input type="text" id="movPatSupervisor" class="w-full border rounded-lg p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">Personal / Chofer que lo usa</label>
+              <input type="text" id="movPatPersonal" placeholder="Ej: Operador Motofurgón" class="w-full border rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">Observaciones</label>
+            <input type="text" id="movPatObs" placeholder="Ej: Asignado a Microruta RI-08 sin novedades" class="w-full border rounded-lg p-2.5 text-sm">
+          </div>
+          <button onclick="guardarMovimientoPatrimonio()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg shadow">
+            GUARDAR USO / ESTADO DEL BIEN
+          </button>
+        </div>
+      </section>
+
+      <!-- 5. HISTORIAL GENERAL (KARDEX) -->
+      <section id="sec-historial" class="hidden space-y-4">
+        <div class="bg-white rounded-xl shadow overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 uppercase">
+                <th class="p-3">Fecha / Hora</th>
+                <th class="p-3">Tipo</th>
+                <th class="p-3">Acción</th>
+                <th class="p-3">Código</th>
+                <th class="p-3">Descripción</th>
+                <th class="p-3">Área de Uso</th>
+                <th class="p-3">Supervisor a Cargo</th>
+                <th class="p-3">Personal que Usó</th>
+                <th class="p-3">Cant. / Estado</th>
+                <th class="p-3">Observación</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHistorial" class="divide-y"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. USUARIOS (SOLO MASTER) -->
+      <section id="sec-usuarios" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-4 rounded-xl shadow space-y-3">
+          <h3 class="font-bold text-gray-700 border-b pb-2"><i class="fas fa-user-plus mr-2 text-green-700"></i>Crear Nueva Cuenta</h3>
+          <input type="text" id="nuevoUserNombre" placeholder="Nombre completo" class="w-full border rounded-lg p-2 text-sm">
+          <input type="text" id="nuevoUserLogin" placeholder="Usuario de acceso (DNI o código)" class="w-full border rounded-lg p-2 text-sm">
+          <input type="password" id="nuevoUserPass" placeholder="Contraseña (mín 6 caracteres)" class="w-full border rounded-lg p-2 text-sm">
+          <select id="nuevoUserRol" class="w-full border rounded-lg p-2 text-sm">
+            <option value="OPERADOR">OPERADOR (Solo Movimientos y Consultas)</option>
+            <option value="MASTER">MASTER (Control y Edición Total)</option>
+          </select>
+          <select id="nuevoUserArea" class="w-full border rounded-lg p-2 text-sm">
+            <option value="Inorgánicos">Inorgánicos</option>
+            <option value="Orgánicos">Orgánicos</option>
+            <option value="Puntos Críticos">Puntos Críticos</option>
+            <option value="Coordinación General">Coordinación General</option>
+          </select>
+          <button onclick="guardarNuevoUsuario()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded-lg text-sm">Crear Usuario</button>
+        </div>
+
+        <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                <th class="p-3">Usuario</th>
+                <th class="p-3">Nombre</th>
+                <th class="p-3">Rol</th>
+                <th class="p-3">Área</th>
+                <th class="p-3">Estado</th>
+                <th class="p-3">Acciones Master</th>
+              </tr>
+            </thead>
+            <tbody id="tablaUsuarios" class="divide-y"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL ESCÁNER EN VIVO DESBLOQUEADO -->
+  <div id="modalScanner" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-extrabold text-gray-800"><i class="fas fa-qrcode text-amber-500 mr-2"></i>Escáner SIGA / Almacén</h3>
+        <button onclick="cerrarModalScanner()" class="text-gray-400 hover:text-red-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="camSelectContainer" class="hidden">
+        <select id="cameraSelection" onchange="cambiarCamaraActiva()" class="w-full border rounded-lg p-2 text-xs"></select>
+      </div>
+      <div id="reader" class="w-full bg-gray-900 rounded-xl overflow-hidden min-h-[240px] flex items-center justify-center text-white text-xs text-center p-4">
+        Activando cámara...
+      </div>
+      <div class="flex gap-2">
+        <label class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+          <i class="fas fa-camera"></i> Capturar Foto QR
+          <input type="file" accept="image/*" capture="environment" onchange="escanearDesdeFoto(event)" class="hidden">
+        </label>
+      </div>
+      <div class="flex gap-2 pt-1 border-t">
+        <input type="text" id="inputCodigoManualScan" placeholder="O digita el código aquí..." class="border rounded-lg px-3 py-2 text-xs flex-1">
+        <button onclick="buscarCodigoManualDesdeScanner()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold">Buscar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DECISIÓN AL ESCANEAR (MOVIMIENTO VS HISTORIAL) -->
+  <div id="modalDecisionScan" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border-t-8 border-green-600" id="decisionCardBorder">
+      <div class="flex justify-between items-start">
+        <div>
+          <span id="scanTipoBadge" class="text-xs font-extrabold uppercase px-2.5 py-1 rounded bg-green-100 text-green-800">ÍTEM DETECTADO</span>
+          <h3 id="scanTituloDesc" class="text-xl font-extrabold text-gray-800 mt-2 leading-snug"></h3>
+          <p id="scanSubCodigo" class="text-xs font-mono font-bold text-gray-500 mt-0.5"></p>
+        </div>
+        <button onclick="cerrarModalDecisionScan()" class="text-gray-400 hover:text-red-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div id="scanResumenDatos" class="bg-gray-50 p-3.5 rounded-xl border text-xs space-y-1.5 text-gray-700"></div>
+      <p class="text-xs font-bold text-center text-gray-500 uppercase tracking-wider">¿Qué deseas hacer con este ítem?</p>
+      <div class="grid grid-cols-1 gap-3">
+        <button onclick="accionDesdeScan('MOVIMIENTO')" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-3 text-sm">
+          <i class="fas fa-exchange-alt text-lg"></i>
+          <span>REGISTRAR MOVIMIENTO / USO</span>
+        </button>
+        <button onclick="accionDesdeScan('HISTORIAL')" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-3 text-sm">
+          <i class="fas fa-clock-rotate-left text-lg"></i>
+          <span>VER HISTORIAL DE USO (ÚLTIMOS 20)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ETIQUETA QR INDIVIDUAL -->
+  <div id="modalVerQR" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-extrabold text-gray-800 text-sm"><i class="fas fa-qrcode text-purple-700 mr-2"></i>Etiqueta QR del Ítem</h3>
+        <button onclick="cerrarModalVerQR()" class="text-gray-400 hover:text-red-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-white flex flex-col items-center justify-center space-y-2">
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-green-800">PROGRAMA RECICLA - MPCP</div>
+        <div id="qrcodeCanvas" class="p-2 bg-white rounded"></div>
+        <div id="qrLabelCodigo" class="font-mono font-extrabold text-base text-gray-900"></div>
+        <div id="qrLabelDesc" class="text-xs font-bold text-gray-600 max-w-[220px] leading-tight"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="descargarImagenQR()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow">
+          <i class="fas fa-download"></i> Descargar PNG
+        </button>
+        <button onclick="imprimirEtiquetaIndividual()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow">
+          <i class="fas fa-print"></i> Imprimir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL HISTORIAL DE USO POR ÍTEM (20 MOVIMIENTOS) -->
+  <div id="modalHistorialItem" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-start border-b pb-3">
+        <div>
+          <span id="histItemBadge" class="text-xs font-bold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800">HISTORIAL DE USO</span>
+          <h3 id="histItemTitulo" class="font-extrabold text-gray-800 text-lg mt-1"></h3>
+          <p id="histItemSubtitulo" class="text-xs text-gray-500"></p>
+        </div>
+        <button onclick="cerrarModalHistorialItem()" class="text-gray-400 hover:text-red-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="overflow-y-auto flex-1 border rounded-lg">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-gray-100 text-gray-600 uppercase sticky top-0">
+            <tr>
+              <th class="p-2.5">Fecha y Hora</th>
+              <th class="p-2.5">Acción</th>
+              <th class="p-2.5">Área que lo usó</th>
+              <th class="p-2.5">Supervisor a Cargo</th>
+              <th class="p-2.5">Personal que lo usó</th>
+              <th class="p-2.5">Cant. / Estado</th>
+              <th class="p-2.5">Observaciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorialItemBody" class="divide-y"></tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center pt-2 text-xs text-gray-500">
+        <span>Mostrando los últimos 20 movimientos registrados.</span>
+        <button onclick="cerrarModalHistorialItem()" class="px-4 py-2 bg-gray-800 text-white rounded-lg font-bold">Cerrar Ventana</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR QUITAR -->
+  <div id="modalConfirmarEliminar" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-4 shadow-2xl border-t-4 border-red-600">
+      <h3 class="font-extrabold text-gray-800 text-lg"><i class="fas fa-triangle-exclamation text-red-600 mr-2"></i>Confirmar Retiro</h3>
+      <p id="elimTextoDetalle" class="text-sm text-gray-600"></p>
+      <input type="hidden" id="elimCodigo">
+      <input type="hidden" id="elimTipo">
+      <input type="text" id="elimMotivo" placeholder="Motivo de retiro / baja..." class="w-full border rounded-lg p-2.5 text-sm">
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="cerrarModalEliminar()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
+        <button onclick="ejecutarEliminacionMaster()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold">Sí, Quitar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR PATRIMONIO -->
+  <div id="modalEditarPatrimonio" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl">
+      <h3 class="font-bold text-gray-800 border-b pb-2">Editar Bien Patrimonial (Master)</h3>
+      <input type="hidden" id="epCodigoOriginal"><input type="hidden" id="epDescOriginal">
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <input type="text" id="epCodigoNuevo" class="border rounded p-2 col-span-2 font-mono font-bold">
+        <input type="text" id="epDesc" class="border rounded p-2 col-span-2">
+        <input type="text" id="epMarca" class="border rounded p-2"><input type="text" id="epModelo" class="border rounded p-2">
+        <input type="text" id="epSerie" class="border rounded p-2">
+        <select id="epEstado" class="border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
+        <select id="epUbicacion" class="border rounded p-2 col-span-2"><option value="POLVOS VERDES">POLVOS VERDES</option><option value="CENTRO INTEGRAL DEL ADULTO MAYOR">CENTRO INTEGRAL DEL ADULTO MAYOR</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option><option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option></select>
+        <input type="text" id="epResp" class="border rounded p-2 col-span-2"><input type="text" id="epObs" class="border rounded p-2 col-span-2">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('modalEditarPatrimonio').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
+        <button onclick="guardarEdicionPatrimonio()" class="px-4 py-2 bg-amber-600 text-white rounded text-sm font-bold">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR MATERIAL -->
+  <div id="modalEditarMaterial" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl">
+      <h3 class="font-bold text-gray-800 border-b pb-2">Editar Material SKU (Master)</h3>
+      <input type="hidden" id="emCodigoOriginal"><input type="hidden" id="emDescOriginal">
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <input type="text" id="emCodigoNuevo" class="border rounded p-2 font-mono font-bold">
+        <select id="emCat" class="border rounded p-2"><option value="Consumibles">Consumibles</option><option value="Herramientas">Herramientas</option><option value="Ferretería">Ferretería</option><option value="Insumos">Insumos</option><option value="Materiales">Materiales</option><option value="EPP">EPP</option></select>
+        <input type="text" id="emDesc" class="border rounded p-2 col-span-2">
+        <select id="emUnidad" class="border rounded p-2"><option value="Unidades">Unidades</option><option value="Cientos">Cientos</option><option value="Metros">Metros</option><option value="Litros">Litros</option><option value="Galones">Galones</option><option value="Kits">Kits</option><option value="Kilos">Kilos</option></select>
+        <select id="emUbicacion" class="border rounded p-2"><option value="ALMACÉN POLVOS VERDES">ALMACÉN POLVOS VERDES</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option></select>
+        <input type="number" id="emStockActual" class="border rounded p-2"><input type="number" id="emStockMin" class="border rounded p-2">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('modalEditarMaterial').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
+        <button onclick="guardarEdicionMaterial()" class="px-4 py-2 bg-amber-600 text-white rounded text-sm font-bold">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR USUARIO -->
+  <div id="modalEditarUsuario" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 shadow-2xl">
+      <h3 class="font-bold text-gray-800 border-b pb-2">Editar Usuario / Contraseña</h3>
+      <input type="hidden" id="euLoginOriginal">
+      <div class="space-y-2 text-sm">
+        <input type="text" id="euLoginNuevo" class="w-full border rounded p-2 font-bold">
+        <input type="text" id="euNombre" class="w-full border rounded p-2">
+        <input type="password" id="euPassword" placeholder="Nueva clave (dejar vacío para no cambiar)" class="w-full border rounded p-2">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="euRol" class="border rounded p-2"><option value="OPERADOR">OPERADOR</option><option value="MASTER">MASTER</option></select>
+          <select id="euEstado" class="border rounded p-2"><option value="ACTIVO">ACTIVO</option><option value="INACTIVO">INACTIVO</option></select>
+        </div>
+        <select id="euArea" class="w-full border rounded p-2"><option value="Inorgánicos">Inorgánicos</option><option value="Orgánicos">Orgánicos</option><option value="Puntos Críticos">Puntos Críticos</option><option value="Coordinación General">Coordinación General</option></select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('modalEditarUsuario').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
+        <button onclick="guardarEdicionUsuario()" class="px-4 py-2 bg-blue-700 text-white rounded text-sm font-bold">Actualizar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVO PATRIMONIO -->
+  <div id="modalNuevoPatrimonio" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3">
+      <h3 class="font-bold text-gray-800 border-b pb-2">Registrar Nuevo Bien Patrimonial (SIGA)</h3>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <input type="text" id="npCodigo" placeholder="Cód. Patrimonial (12 dígitos)" class="border rounded p-2 col-span-2">
+        <input type="text" id="npDesc" placeholder="Descripción del Bien" class="border rounded p-2 col-span-2">
+        <input type="text" id="npMarca" placeholder="Marca" class="border rounded p-2"><input type="text" id="npModelo" placeholder="Modelo" class="border rounded p-2">
+        <input type="text" id="npSerie" placeholder="Serie o Placa" class="border rounded p-2">
+        <select id="npEstado" class="border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
+        <select id="npUbicacion" class="border rounded p-2 col-span-2"><option value="POLVOS VERDES">POLVOS VERDES</option><option value="CENTRO INTEGRAL DEL ADULTO MAYOR">CENTRO INTEGRAL ADULTO MAYOR</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option></select>
+        <input type="text" id="npResp" value="Omar Ushiñahua Rucoba" class="border rounded p-2 col-span-2">
+        <input type="text" id="npObs" placeholder="Observaciones iniciales" class="border rounded p-2 col-span-2">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('modalNuevoPatrimonio').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
+        <button onclick="crearBienPatrimonial()" class="px-4 py-2 bg-green-700 text-white rounded text-sm font-bold">Guardar Bien</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVO MATERIAL -->
+  <div id="modalNuevoMaterial" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3">
+      <h3 class="font-bold text-gray-800 border-b pb-2">Crear Nuevo Material en Almacén</h3>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <input type="text" id="nmCodigo" placeholder="Código SKU (Ej: MAT-015)" class="border rounded p-2">
+        <select id="nmCat" class="border rounded p-2"><option value="Consumibles">Consumibles</option><option value="Herramientas">Herramientas</option><option value="Ferretería">Ferretería</option><option value="Insumos">Insumos</option><option value="Materiales">Materiales</option><option value="EPP">EPP</option></select>
+        <input type="text" id="nmDesc" placeholder="Descripción del Material" class="border rounded p-2 col-span-2">
+        <select id="nmUnidad" class="border rounded p-2"><option value="Unidades">Unidades</option><option value="Cientos">Cientos</option><option value="Metros">Metros</option><option value="Litros">Litros</option><option value="Galones">Galones</option><option value="Kits">Kits</option><option value="Kilos">Kilos</option></select>
+        <select id="nmUbicacion" class="border rounded p-2"><option value="ALMACÉN POLVOS VERDES">ALMACÉN POLVOS VERDES</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option></select>
+        <input type="number" id="nmStockIni" placeholder="Stock Inicial" class="border rounded p-2"><input type="number" id="nmStockMin" placeholder="Stock Mínimo" class="border rounded p-2">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('modalNuevoMaterial').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
+        <button onclick="crearMaterialSKU()" class="px-4 py-2 bg-green-700 text-white rounded text-sm font-bold">Guardar Material</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // URL API DIRECTA EN EL CÓDIGO (SIN BOTÓN EN PANTALLA)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGr49zj-HmB4MUCPFc1YyLIHfAYN8JFhiARwaWJQTYCMwVnUQtGVTL9bAeKfSAaoGJLQ/exec";
+
+    let currentUser = null;
+    let sessionToken = null;
+    let db = { patrimonio: [], materiales: [], movimientos: [], usuarios: [] };
+    let html5QrCode = null;
+    let itemEscaneadoActual = null;
+
+    async function llamarAPI(payload) {
+      if (payload.action !== 'login' && sessionToken) {
+        payload.token = sessionToken;
+      }
+
+      let data = null;
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        data = await new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .procesarPeticionUnificada(payload);
+        });
+      } else {
+        // 1. Intento vía GET con parámetro payload (Evita bloqueo CORS en redirecciones 302 de Google Apps Script)
+        try {
+          const urlGet = SCRIPT_URL + "?payload=" + encodeURIComponent(JSON.stringify(payload)) + "&t=" + Date.now();
+          const resGet = await fetch(urlGet, { method: 'GET', redirect: 'follow' });
+          const txtGet = await resGet.text();
+          if (txtGet && txtGet.trim().startsWith('{')) {
+            data = JSON.parse(txtGet);
+          }
+        } catch (eGet) {}
+
+        // 2. Respaldo vía POST
+        if (!data) {
+          const resPost = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+          data = await resPost.json();
+        }
+      }
+
+      if (data && data.authError && payload.action !== 'login') {
+        alert(data.message || 'Tu sesión ha expirado por seguridad. Vuelve a iniciar sesión.');
+        cerrarSesion(true);
+      }
+      return data;
+    }
+
+    async function iniciarSesion() {
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+      const btn = document.getElementById('btnLogin');
+      const err = document.getElementById('loginError');
+      if (!u || !p) return;
+
+      btn.innerText = 'VERIFICANDO...';
+      err.classList.add('hidden');
+
+      try {
+        const res = await llamarAPI({ action: 'login', username: u, password: p });
+        btn.innerText = 'INGRESAR AL SISTEMA';
+        if (res.success) {
+          currentUser = res.user;
+          sessionToken = res.token;
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('appScreen').classList.remove('hidden');
+          document.getElementById('userNameDisplay').innerText = currentUser.nombre;
+          document.getElementById('userRoleDisplay').innerText = currentUser.rol + ' - ' + currentUser.area;
+
+          document.getElementById('movMatSupervisor').value = currentUser.nombre;
+          document.getElementById('movPatSupervisor').value = currentUser.nombre;
+
+          const selectAccion = document.getElementById('movMatAccion');
+          const optAjuste = [...selectAccion.options].find(o => o.value === 'AJUSTE DE INVENTARIO');
+
+          if (currentUser.rol === 'MASTER') {
+            document.getElementById('tab-usuarios').classList.remove('hidden');
+            document.getElementById('btnNuevoPatrimonio').classList.remove('hidden');
+            document.getElementById('btnNuevoMaterial').classList.remove('hidden');
+            if (!optAjuste) selectAccion.add(new Option('AJUSTE DE INVENTARIO (Fijar Stock Exacto)', 'AJUSTE DE INVENTARIO'));
+          } else {
+            document.getElementById('tab-usuarios').classList.add('hidden');
+            document.getElementById('btnNuevoPatrimonio').classList.add('hidden');
+            document.getElementById('btnNuevoMaterial').classList.add('hidden');
+            if (optAjuste) optAjuste.remove();
+          }
+
+          cambiarTab('dashboard');
+          cargarDatos();
+        } else {
+          err.innerText = res.message;
+          err.classList.remove('hidden');
+        }
+      } catch (e) {
+        btn.innerText = 'INGRESAR AL SISTEMA';
+        err.innerText = 'No se pudo conectar (' + e.message + '). Asegúrate de haber publicado la versión nueva en Código.gs.';
+        err.classList.remove('hidden');
+      }
+    }
+
+    function cerrarSesion(silencioso) {
+      if (!silencioso && sessionToken) {
+        llamarAPI({ action: 'logout', token: sessionToken }).catch(() => {});
+      }
+      currentUser = null;
+      sessionToken = null;
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('loginPass').value = '';
+    }
+
+    function cambiarTab(tab) {
+      if (tab === 'usuarios' && (!currentUser || currentUser.rol !== 'MASTER')) return;
+      ['dashboard', 'patrimonio', 'almacen', 'movimientos', 'historial', 'usuarios'].forEach(t => {
+        document.getElementById('sec-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('tab-active');
+      });
+      document.getElementById('sec-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.add('tab-active');
+    }
+
+    async function cargarDatos(animar) {
+      if (animar) document.getElementById('iconSync').classList.add('fa-spin');
+      try {
+        const res = await llamarAPI({ action: 'obtenerDatos' });
+        if (res.success) {
+          db = res.data;
+          renderizarDashboard();
+          renderizarPatrimonio();
+          renderizarMateriales();
+          renderizarSelectsMovimientos();
+          renderizarHistorial();
+          if (currentUser && currentUser.rol === 'MASTER') renderizarUsuarios();
+        }
+      } catch (e) {}
+      if (animar) document.getElementById('iconSync').classList.remove('fa-spin');
+    }
+
+    function renderizarDashboard() {
+      document.getElementById('kpi-total-patrimonio').innerText = db.patrimonio.length;
+      const observados = db.patrimonio.filter(p => p[6] === 'Regular' || p[6] === 'Malo');
+      document.getElementById('kpi-alerta-patrimonio').innerText = observados.length;
+
+      document.getElementById('kpi-total-materiales').innerText = db.materiales.length;
+      const stockBajo = db.materiales.filter(m => Number(m[4]) <= Number(m[5]));
+      document.getElementById('kpi-alerta-stock').innerText = stockBajo.length;
+
+      const contStock = document.getElementById('listaAlertasStock');
+      contStock.innerHTML = stockBajo.length ? '' : '<p class="text-green-600 font-medium">Todo el almacén cuenta con stock óptimo.</p>';
+      stockBajo.forEach(m => {
+        const descSafe = String(m[1]).replace(/'/g, "\'");
+        contStock.innerHTML += `
+          <div class="flex justify-between items-center bg-red-50 p-2.5 rounded-lg border border-red-200">
+            <div>
+              <span onclick="verHistorialItem('${m[0]}', '${descSafe}', 'MATERIAL')" class="font-bold text-gray-800 hover:text-blue-600 cursor-pointer underline">${m[1]}</span>
+              <span class="text-xs text-gray-500 block">Categoría: ${m[2]} | Mínimo: ${m[5]} ${m[3]}</span>
+            </div>
+            <span class="bg-red-600 text-white px-2.5 py-1 rounded font-bold text-xs">Quedan: ${m[4]} ${m[3]}</span>
+          </div>`;
+      });
+
+      const contPat = document.getElementById('listaAlertasPatrimonio');
+      contPat.innerHTML = observados.length ? '' : '<p class="text-green-600 font-medium">Todos los bienes en estado Bueno.</p>';
+      observados.forEach(p => {
+        const badgeColor = p[6] === 'Malo' ? 'bg-red-600 text-white' : 'bg-amber-500 text-white';
+        const descSafe = String(p[1]).replace(/'/g, "\'");
+        contPat.innerHTML += `
+          <div class="flex justify-between items-center bg-amber-50/60 p-2.5 rounded-lg border border-amber-200">
+            <div>
+              <span onclick="verHistorialItem('${p[0]}', '${descSafe}', 'PATRIMONIO')" class="font-bold text-gray-800 hover:text-blue-600 cursor-pointer underline">[${p[0]}] ${p[1]}</span>
+              <span class="text-xs text-gray-500 block">${p[2]} ${p[3]} (${p[4]}) - Ubicación: ${p[5]}</span>
+            </div>
+            <span class="${badgeColor} px-2.5 py-1 rounded font-bold text-xs">${p[6]}</span>
+          </div>`;
+      });
+    }
+
+    function renderizarPatrimonio() {
+      const q = document.getElementById('buscarPatrimonio').value.toLowerCase();
+      const est = document.getElementById('filtroEstadoPatrimonio').value;
+      const tbody = document.getElementById('tablaPatrimonio');
+      tbody.innerHTML = '';
+      const esMaster = currentUser && currentUser.rol === 'MASTER';
+
+      db.patrimonio.filter(p => {
+        const matchQ = String(p[0]).toLowerCase().includes(q) || String(p[1]).toLowerCase().includes(q) || String(p[4]).toLowerCase().includes(q) || String(p[8]).toLowerCase().includes(q);
+        const matchE = !est || p[6] === est;
+        return matchQ && matchE;
+      }).forEach(p => {
+        const badge = p[6] === 'Bueno' ? 'bg-green-100 text-green-800' : (p[6] === 'Regular' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
+        const descSafe = String(p[1]).replace(/'/g, "\'");
+        const botonesMaster = esMaster ? `
+          <button onclick="abrirModalEditarPatrimonio('${p[0]}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-edit"></i></button>
+          <button onclick="abrirModalConfirmarEliminar('${p[0]}', '${descSafe}', 'PATRIMONIO')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-trash-can"></i></button>` : '';
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-50">
+            <td class="p-3 font-mono font-bold text-blue-800">${p[0]}</td>
+            <td class="p-3">
+              <button onclick="verHistorialItem('${p[0]}', '${descSafe}', 'PATRIMONIO')" class="text-left font-bold text-blue-700 hover:underline flex items-center gap-1.5">
+                <span>${p[1]}</span><i class="fas fa-clock-rotate-left text-xs text-blue-500"></i>
+              </button>
+            </td>
+            <td class="p-3 text-xs text-gray-600">${p[2]} / ${p[3]} <br><b>Serie/Placa: ${p[4]}</b></td>
+            <td class="p-3 text-xs">${p[5]}</td>
+            <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-bold ${badge}">${p[6]}</span></td>
+            <td class="p-3 text-xs font-medium">${p[8]}</td>
+            <td class="p-3 whitespace-nowrap">
+              <button onclick="mostrarModalQRIndividual('${p[0]}', '${descSafe}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-qrcode"></i> QR</button>
+              <button onclick="seleccionarBienParaMovimiento('${p[0]}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-clipboard-check"></i> Uso</button>
+              ${botonesMaster}
+            </td>
+          </tr>`;
+      });
+    }
+
+    function renderizarMateriales() {
+      const q = document.getElementById('buscarMaterial').value.toLowerCase();
+      const cat = document.getElementById('filtroCatMaterial').value;
+      const tbody = document.getElementById('tablaMateriales');
+      tbody.innerHTML = '';
+      const esMaster = currentUser && currentUser.rol === 'MASTER';
+
+      db.materiales.filter(m => {
+        const matchQ = String(m[0]).toLowerCase().includes(q) || String(m[1]).toLowerCase().includes(q);
+        const matchC = !cat || m[2] === cat;
+        return matchQ && matchC;
+      }).forEach(m => {
+        const bajo = Number(m[4]) <= Number(m[5]);
+        const badge = bajo ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
+        const descSafe = String(m[1]).replace(/'/g, "\'");
+        const botonesMaster = esMaster ? `
+          <button onclick="abrirModalEditarMaterial('${m[0]}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-edit"></i></button>
+          <button onclick="abrirModalConfirmarEliminar('${m[0]}', '${descSafe}', 'MATERIAL')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-trash-can"></i></button>` : '';
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-50">
+            <td class="p-3 font-mono font-bold text-green-800">${m[0]}</td>
+            <td class="p-3">
+              <button onclick="verHistorialItem('${m[0]}', '${descSafe}', 'MATERIAL')" class="text-left font-bold text-green-800 hover:underline flex items-center gap-1.5">
+                <span>${m[1]}</span><i class="fas fa-clock-rotate-left text-xs text-green-600"></i>
+              </button>
+            </td>
+            <td class="p-3 text-xs">${m[2]}</td>
+            <td class="p-3 text-xs text-gray-500">${m[6]}</td>
+            <td class="p-3 font-extrabold text-base">${m[4]}</td>
+            <td class="p-3 text-gray-500">${m[5]}</td>
+            <td class="p-3 text-xs font-bold uppercase">${m[3]}</td>
+            <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-bold ${badge}">${bajo ? 'STOCK BAJO' : 'ÓPTIMO'}</span></td>
+            <td class="p-3 whitespace-nowrap">
+              <button onclick="mostrarModalQRIndividual('${m[0]}', '${descSafe}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-qrcode"></i> QR</button>
+              <button onclick="seleccionarMaterialParaMovimiento('${m[0]}')" class="bg-green-50 hover:bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-dolly"></i> Mover</button>
+              ${botonesMaster}
+            </td>
+          </tr>`;
+      });
+    }
+
+    // GENERACIÓN Y DESCARGA DE ETIQUETAS QR
+    function mostrarModalQRIndividual(codigo, descripcion) {
+      const modal = document.getElementById('modalVerQR');
+      const container = document.getElementById('qrcodeCanvas');
+      container.innerHTML = '';
+      document.getElementById('qrLabelCodigo').innerText = codigo;
+      document.getElementById('qrLabelDesc').innerText = descripcion;
+      new QRCode(container, { text: String(codigo), width: 170, height: 170, correctLevel: QRCode.CorrectLevel.H });
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function cerrarModalVerQR() {
+      document.getElementById('modalVerQR').classList.add('hidden');
+      document.getElementById('modalVerQR').classList.remove('flex');
+    }
+
+    function descargarImagenQR() {
+      const codigo = document.getElementById('qrLabelCodigo').innerText;
+      const desc = document.getElementById('qrLabelDesc').innerText;
+      const source = document.querySelector('#qrcodeCanvas canvas') || document.querySelector('#qrcodeCanvas img');
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = 300; outCanvas.height = 350;
+      const ctx = outCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 300, 350);
+      ctx.strokeStyle = '#15803d'; ctx.lineWidth = 4; ctx.strokeRect(8, 8, 284, 334);
+      ctx.fillStyle = '#15803d'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('PROGRAMA RECICLA - MPCP', 150, 32);
+      if (source) ctx.drawImage(source, 50, 45, 200, 200);
+      ctx.fillStyle = '#000000'; ctx.font = 'bold 18px Courier New'; ctx.fillText(codigo, 150, 275);
+      ctx.fillStyle = '#374151'; ctx.font = 'bold 11px Arial';
+      ctx.fillText(desc.length > 34 ? desc.substring(0, 34) + '...' : desc, 150, 300);
+      const link = document.createElement('a');
+      link.download = `QR_${codigo}.png`;
+      link.href = outCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function imprimirEtiquetaIndividual() {
+      const codigo = document.getElementById('qrLabelCodigo').innerText;
+      const desc = document.getElementById('qrLabelDesc').innerText;
+      const qrCanvas = document.querySelector('#qrcodeCanvas canvas');
+      const qrImg = document.querySelector('#qrcodeCanvas img');
+      const dataUrl = qrCanvas ? qrCanvas.toDataURL() : (qrImg ? qrImg.src : '');
+      const win = window.open('', '_blank');
+      win.document.write(`<html><body onload="window.print()" style="font-family:Arial;display:flex;justify-content:center;padding:20px;"><div style="border:2px dashed #000;padding:15px;width:220px;text-align:center;border-radius:8px;"><div style="font-size:10px;font-weight:bold;color:#15803d;margin-bottom:6px;">PROGRAMA RECICLA - MPCP</div><img src="${dataUrl}" width="160" height="160"/><div style="font-family:monospace;font-size:16px;font-weight:bold;margin-top:6px;">${codigo}</div><div style="font-size:11px;margin-top:4px;">${desc}</div></div></body></html>`);
+      win.document.close();
+    }
+
+    function imprimirLoteQR(tipo) {
+      const lista = tipo === 'PATRIMONIO' ? db.patrimonio.map(p => ({ codigo: String(p[0]), desc: String(p[1]) })) : db.materiales.map(m => ({ codigo: String(m[0]), desc: String(m[1]) }));
+      if (!lista.length) return alert('No hay ítems para imprimir.');
+      const win = window.open('', '_blank');
+      win.document.write(`<html><head><title>Etiquetas QR - ${tipo}</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script><style>body{font-family:Arial;margin:15px}.no-print{margin-bottom:15px;padding:10px;background:#f0fdf4;border:1px solid #15803d;border-radius:8px;display:flex;justify-content:space-between;align-items:center}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{border:1px dashed #333;padding:10px;text-align:center;border-radius:6px;page-break-inside:avoid;display:flex;flex-direction:column;align-items:center}@media print{.no-print{display:none}}</style></head><body><div class="no-print"><b>Plancha A4 (${lista.length} etiquetas QR)</b><button onclick="window.print()" style="background:#15803d;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold">Imprimir Ahora</button></div><div class="grid" id="qrGrid"></div><script>const items=${JSON.stringify(lista)};const grid=document.getElementById('qrGrid');items.forEach((it,idx)=>{const d=document.createElement('div');d.className='card';d.innerHTML='<div style="font-size:9px;font-weight:bold;color:#15803d;margin-bottom:5px">RECICLA - MPCP</div><div id="q_'+idx+'"></div><div style="font-family:monospace;font-size:13px;font-weight:bold;margin-top:6px">'+it.codigo+'</div><div style="font-size:10px;margin-top:3px;height:24px;overflow:hidden">'+it.desc+'</div>';grid.appendChild(d);new QRCode(document.getElementById('q_'+idx),{text:it.codigo,width:115,height:115});});<\/script></body></html>`);
+      win.document.close();
+    }
+
+    // ESCÁNER EN VIVO DESBLOQUEADO
+    function abrirModalScanner() {
+      const modal = document.getElementById('modalScanner');
+      document.getElementById('inputCodigoManualScan').value = '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      iniciarCamaraEnVivo();
+    }
+
+    function iniciarCamaraEnVivo(camId) {
+      if (html5QrCode) { try { html5QrCode.stop().catch(() => {}); } catch (e) {} }
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 230, height: 160 } };
+
+      if (camId) {
+        html5QrCode.start(camId, config, onScanSuccess, () => {});
+        return;
+      }
+
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length > 0) {
+          const sel = document.getElementById('cameraSelection');
+          sel.innerHTML = '';
+          devices.forEach((d, i) => sel.add(new Option(d.label || `Cámara ${i + 1}`, d.id)));
+          if (devices.length > 1) document.getElementById('camSelectContainer').classList.remove('hidden');
+          const back = devices.find(d => /back|trasera|environment/i.test(d.label));
+          const chosen = back ? back.id : devices[devices.length - 1].id;
+          sel.value = chosen;
+          html5QrCode.start(chosen, config, onScanSuccess, () => {});
+        } else {
+          html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, () => {});
+        }
+      }).catch(() => {
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, () => {});
+      });
+    }
+
+    function cambiarCamaraActiva() {
+      const camId = document.getElementById('cameraSelection').value;
+      if (camId) iniciarCamaraEnVivo(camId);
+    }
+
+    function escanearDesdeFoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const fileScanner = new Html5Qrcode("reader");
+      fileScanner.scanFile(file, true)
+        .then(txt => { event.target.value = ''; onScanSuccess(txt); })
+        .catch(() => { event.target.value = ''; alert("No se detectó un QR nítido en la foto."); });
+    }
+
+    function buscarCodigoManualDesdeScanner() {
+      const cod = document.getElementById('inputCodigoManualScan').value.trim();
+      if (cod) onScanSuccess(cod);
+    }
+
+    function onScanSuccess(decodedText) {
+      cerrarModalScanner();
+      procesarCodigoEscaneado(decodedText.trim());
+    }
+
+    function cerrarModalScanner() {
+      const modal = document.getElementById('modalScanner');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (html5QrCode) { try { html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {}); } catch (e) {} }
+    }
+
+    function procesarCodigoEscaneado(codigo) {
+      const pat = db.patrimonio.find(p => String(p[0]).toUpperCase() === codigo.toUpperCase() || String(p[4]).toUpperCase() === codigo.toUpperCase());
+      if (pat) {
+        itemEscaneadoActual = { tipo: 'PATRIMONIO', codigo: String(pat[0]), descripcion: String(pat[1]) };
+        document.getElementById('decisionCardBorder').className = 'bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border-t-8 border-blue-600';
+        document.getElementById('scanTipoBadge').className = 'text-xs font-extrabold uppercase px-2.5 py-1 rounded bg-blue-100 text-blue-800';
+        document.getElementById('scanTipoBadge').innerText = 'BIEN PATRIMONIAL (SIGA)';
+        document.getElementById('scanTituloDesc').innerText = pat[1];
+        document.getElementById('scanSubCodigo').innerText = `Cód. Patrimonial: ${pat[0]} | Serie/Placa: ${pat[4]}`;
+        document.getElementById('scanResumenDatos').innerHTML = `<div><b>Marca / Modelo:</b> ${pat[2]} / ${pat[3]}</div><div><b>Ubicación Actual:</b> ${pat[5]}</div><div><b>Estado Físico:</b> <b>${pat[6]}</b></div><div><b>Último Responsable:</b> ${pat[8]}</div>`;
+        document.getElementById('modalDecisionScan').classList.remove('hidden');
+        document.getElementById('modalDecisionScan').classList.add('flex');
+        return;
+      }
+      const mat = db.materiales.find(m => String(m[0]).toUpperCase() === codigo.toUpperCase());
+      if (mat) {
+        itemEscaneadoActual = { tipo: 'MATERIAL', codigo: String(mat[0]), descripcion: String(mat[1]) };
+        document.getElementById('decisionCardBorder').className = 'bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border-t-8 border-green-600';
+        document.getElementById('scanTipoBadge').className = 'text-xs font-extrabold uppercase px-2.5 py-1 rounded bg-green-100 text-green-800';
+        document.getElementById('scanTipoBadge').innerText = 'MATERIAL DE ALMACÉN (SKU)';
+        document.getElementById('scanTituloDesc').innerText = mat[1];
+        document.getElementById('scanSubCodigo').innerText = `Código SKU: ${mat[0]} | Categoría: ${mat[2]}`;
+        document.getElementById('scanResumenDatos').innerHTML = `<div><b>Stock Disponible:</b> <span class="text-base font-extrabold text-green-700">${mat[4]} ${mat[3]}</span></div><div><b>Stock Mínimo:</b> ${mat[5]} ${mat[3]}</div><div><b>Ubicación Almacén:</b> ${mat[6]}</div>`;
+        document.getElementById('modalDecisionScan').classList.remove('hidden');
+        document.getElementById('modalDecisionScan').classList.add('flex');
+        return;
+      }
+      alert(`El código "${codigo}" no fue encontrado.`);
+    }
+
+    function cerrarModalDecisionScan() {
+      document.getElementById('modalDecisionScan').classList.add('hidden');
+      document.getElementById('modalDecisionScan').classList.remove('flex');
+    }
+
+    function accionDesdeScan(eleccion) {
+      if (!itemEscaneadoActual) return;
+      cerrarModalDecisionScan();
+      if (eleccion === 'HISTORIAL') {
+        verHistorialItem(itemEscaneadoActual.codigo, itemEscaneadoActual.descripcion, itemEscaneadoActual.tipo);
+      } else {
+        if (itemEscaneadoActual.tipo === 'PATRIMONIO') {
+          seleccionarBienParaMovimiento(itemEscaneadoActual.codigo);
+          document.getElementById('cardMovPatrimonio').scrollIntoView({ behavior: 'smooth' });
+        } else {
+          seleccionarMaterialParaMovimiento(itemEscaneadoActual.codigo);
+          document.getElementById('cardMovMaterial').scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+
+    // CRUD Y MOVIMIENTOS VÍA API
+    function abrirModalConfirmarEliminar(codigo, descripcion, tipo) {
+      document.getElementById('elimCodigo').value = codigo;
+      document.getElementById('elimTipo').value = tipo;
+      document.getElementById('elimMotivo').value = '';
+      document.getElementById('elimTextoDetalle').innerHTML = `¿Seguro de quitar <b>[${codigo}] ${descripcion}</b>?`;
+      document.getElementById('modalConfirmarEliminar').classList.remove('hidden');
+      document.getElementById('modalConfirmarEliminar').classList.add('flex');
+    }
+
+    function cerrarModalEliminar() {
+      document.getElementById('modalConfirmarEliminar').classList.add('hidden');
+      document.getElementById('modalConfirmarEliminar').classList.remove('flex');
+    }
+
+    async function ejecutarEliminacionMaster() {
+      const codigo = document.getElementById('elimCodigo').value;
+      const tipo = document.getElementById('elimTipo').value;
+      const motivo = document.getElementById('elimMotivo').value.trim() || 'Retirado por Master';
+      const payload = tipo === 'PATRIMONIO'
+        ? { action: 'eliminarPatrimonio', codigo, motivo, usuarioAct: currentUser.username }
+        : { action: 'eliminarMaterial', sku: codigo, motivo, usuarioAct: currentUser.username };
+      const res = await llamarAPI(payload);
+      alert(res.message);
+      if (res.success) { cerrarModalEliminar(); cargarDatos(); }
+    }
+
+    function abrirModalEditarPatrimonio(codigo) {
+      const p = db.patrimonio.find(i => String(i[0]) === String(codigo));
+      if (!p) return;
+      document.getElementById('epCodigoOriginal').value = p[0];
+      document.getElementById('epDescOriginal').value = p[1];
+      document.getElementById('epCodigoNuevo').value = p[0];
+      document.getElementById('epDesc').value = p[1];
+      document.getElementById('epMarca').value = p[2];
+      document.getElementById('epModelo').value = p[3];
+      document.getElementById('epSerie').value = p[4];
+      document.getElementById('epUbicacion').value = p[5];
+      document.getElementById('epEstado').value = p[6];
+      document.getElementById('epResp').value = p[8];
+      document.getElementById('epObs').value = p[9] || '';
+      document.getElementById('modalEditarPatrimonio').classList.remove('hidden');
+      document.getElementById('modalEditarPatrimonio').classList.add('flex');
+    }
+
+    async function guardarEdicionPatrimonio() {
+      const item = {
+        codigoOriginal: document.getElementById('epCodigoOriginal').value.trim(),
+        descripcionOriginal: document.getElementById('epDescOriginal').value.trim(),
+        codigoNuevo: document.getElementById('epCodigoNuevo').value.trim(),
+        descripcion: document.getElementById('epDesc').value.trim(),
+        marca: document.getElementById('epMarca').value.trim(),
+        modelo: document.getElementById('epModelo').value.trim(),
+        serie: document.getElementById('epSerie').value.trim(),
+        ubicacion: document.getElementById('epUbicacion').value,
+        estado: document.getElementById('epEstado').value,
+        responsable: document.getElementById('epResp').value.trim(),
+        observaciones: document.getElementById('epObs').value.trim()
+      };
+      const res = await llamarAPI({ action: 'editarPatrimonio', item, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('modalEditarPatrimonio').classList.add('hidden'); cargarDatos(); }
+    }
+
+    function abrirModalEditarMaterial(sku) {
+      const m = db.materiales.find(i => String(i[0]) === String(sku));
+      if (!m) return;
+      document.getElementById('emCodigoOriginal').value = m[0];
+      document.getElementById('emDescOriginal').value = m[1];
+      document.getElementById('emCodigoNuevo').value = m[0];
+      document.getElementById('emDesc').value = m[1];
+      document.getElementById('emCat').value = m[2];
+      document.getElementById('emUnidad').value = m[3];
+      document.getElementById('emStockActual').value = m[4];
+      document.getElementById('emStockMin').value = m[5];
+      document.getElementById('emUbicacion').value = m[6];
+      document.getElementById('modalEditarMaterial').classList.remove('hidden');
+      document.getElementById('modalEditarMaterial').classList.add('flex');
+    }
+
+    async function guardarEdicionMaterial() {
+      const mat = {
+        codigoOriginal: document.getElementById('emCodigoOriginal').value.trim(),
+        descripcionOriginal: document.getElementById('emDescOriginal').value.trim(),
+        codigoNuevo: document.getElementById('emCodigoNuevo').value.trim(),
+        descripcion: document.getElementById('emDesc').value.trim(),
+        categoria: document.getElementById('emCat').value,
+        unidad: document.getElementById('emUnidad').value,
+        stockActual: document.getElementById('emStockActual').value,
+        stockMinimo: document.getElementById('emStockMin').value,
+        ubicacion: document.getElementById('emUbicacion').value
+      };
+      const res = await llamarAPI({ action: 'editarMaterial', mat, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('modalEditarMaterial').classList.add('hidden'); cargarDatos(); }
+    }
+
+    function verHistorialItem(codigo, descripcion, tipo) {
+      const modal = document.getElementById('modalHistorialItem');
+      document.getElementById('histItemBadge').innerText = tipo === 'PATRIMONIO' ? 'HISTORIAL BIEN PATRIMONIAL (SIGA)' : 'HISTORIAL MATERIAL DE ALMACÉN (SKU)';
+      document.getElementById('histItemTitulo').innerText = descripcion;
+      document.getElementById('histItemSubtitulo').innerText = `Código: ${codigo}`;
+      const movs = db.movimientos.filter(m => String(m[4]).toUpperCase() === String(codigo).toUpperCase()).slice(0, 20);
+      const tbody = document.getElementById('tablaHistorialItemBody');
+      tbody.innerHTML = movs.length ? '' : `<tr><td colspan="7" class="p-6 text-center text-gray-400">Sin movimientos registrados.</td></tr>`;
+      movs.forEach(m => {
+        tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="p-2.5 whitespace-nowrap">${m[1]}</td><td class="p-2.5 font-bold">${m[3]}</td><td class="p-2.5">${m[6] || '-'}</td><td class="p-2.5 font-medium text-blue-900">${m[7] || '-'}</td><td class="p-2.5 font-medium text-emerald-900">${m[8] || '-'}</td><td class="p-2.5 font-bold">${tipo === 'PATRIMONIO' ? m[10] : m[9]}</td><td class="p-2.5 text-gray-500">${m[12] || '-'}</td></tr>`;
+      });
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function cerrarModalHistorialItem() {
+      document.getElementById('modalHistorialItem').classList.add('hidden');
+      document.getElementById('modalHistorialItem').classList.remove('flex');
+    }
+
+    function renderizarSelectsMovimientos() {
+      const selMat = document.getElementById('movMatCodigo');
+      selMat.innerHTML = '';
+      db.materiales.forEach(m => selMat.add(new Option(`[${m[0]}] ${m[1]} (Disp: ${m[4]} ${m[3]})`, m[0])));
+      const selPat = document.getElementById('movPatCodigo');
+      selPat.innerHTML = '';
+      db.patrimonio.forEach(p => selPat.add(new Option(`[${p[0]}] ${p[1]} (${p[4]})`, p[0])));
+      cargarDetallePatrimonio();
+    }
+
+    function cargarDetallePatrimonio() {
+      const cod = document.getElementById('movPatCodigo').value;
+      const item = db.patrimonio.find(p => String(p[0]) === String(cod));
+      if (item) {
+        document.getElementById('movPatUbicacion').value = item[5];
+        document.getElementById('movPatEstado').value = item[6];
+        document.getElementById('movPatPersonal').value = item[8];
+      }
+    }
+
+    function seleccionarBienParaMovimiento(codigo) {
+      cambiarTab('movimientos');
+      document.getElementById('movPatCodigo').value = codigo;
+      cargarDetallePatrimonio();
+    }
+
+    function seleccionarMaterialParaMovimiento(codigo) {
+      cambiarTab('movimientos');
+      document.getElementById('movMatCodigo').value = codigo;
+    }
+
+    async function guardarMovimientoMaterial() {
+      const mov = {
+        codigo: document.getElementById('movMatCodigo').value,
+        tipoAccion: document.getElementById('movMatAccion').value,
+        cantidad: document.getElementById('movMatCantidad').value,
+        areaUso: document.getElementById('movMatArea').value,
+        supervisor: document.getElementById('movMatSupervisor').value.trim() || currentUser.nombre,
+        personalUsuario: document.getElementById('movMatPersonal').value.trim() || 'No especificado',
+        observaciones: document.getElementById('movMatObs').value.trim()
+      };
+      const res = await llamarAPI({ action: 'movimientoMaterial', mov, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('movMatObs').value = ''; cargarDatos(); }
+    }
+
+    async function guardarMovimientoPatrimonio() {
+      const mov = {
+        codigo: document.getElementById('movPatCodigo').value,
+        accion: document.getElementById('movPatAccion').value,
+        estado: document.getElementById('movPatEstado').value,
+        areaUso: document.getElementById('movPatArea').value,
+        ubicacion: document.getElementById('movPatUbicacion').value,
+        supervisor: document.getElementById('movPatSupervisor').value.trim() || currentUser.nombre,
+        personalUsuario: document.getElementById('movPatPersonal').value.trim() || currentUser.nombre,
+        observaciones: document.getElementById('movPatObs').value.trim()
+      };
+      const res = await llamarAPI({ action: 'movimientoPatrimonio', mov, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('movPatObs').value = ''; cargarDatos(); }
+    }
+
+    function renderizarHistorial() {
+      const tbody = document.getElementById('tablaHistorial');
+      tbody.innerHTML = '';
+      db.movimientos.slice(0, 100).forEach(m => {
+        const badge = m[2] === 'PATRIMONIO' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+        tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="p-3 whitespace-nowrap">${m[1]}</td><td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${badge}">${m[2]}</span></td><td class="p-3 font-semibold">${m[3]}</td><td class="p-3 font-mono">${m[4]}</td><td class="p-3 font-medium">${m[5]}</td><td class="p-3">${m[6]}</td><td class="p-3">${m[7]}</td><td class="p-3">${m[8]}</td><td class="p-3 font-bold">${m[2] === 'PATRIMONIO' ? m[10] : m[9]}</td><td class="p-3 text-gray-500">${m[12]}</td></tr>`;
+      });
+    }
+
+    function renderizarUsuarios() {
+      const tbody = document.getElementById('tablaUsuarios');
+      tbody.innerHTML = '';
+      db.usuarios.forEach(u => {
+        const activo = u[4] === 'ACTIVO';
+        tbody.innerHTML += `<tr><td class="p-3 font-bold">${u[0]}</td><td class="p-3">${u[1]}</td><td class="p-3 text-xs font-bold">${u[2]}</td><td class="p-3">${u[3]}</td><td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${u[4]}</span></td><td class="p-3"><button onclick="abrirModalEditarUsuario('${u[0]}')" class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded text-xs font-bold"><i class="fas fa-user-pen"></i> Editar / Clave</button></td></tr>`;
+      });
+    }
+
+    function abrirModalEditarUsuario(username) {
+      const u = db.usuarios.find(i => String(i[0]) === String(username));
+      if (!u) return;
+      document.getElementById('euLoginOriginal').value = u[0];
+      document.getElementById('euLoginNuevo').value = u[0];
+      document.getElementById('euNombre').value = u[1];
+      document.getElementById('euPassword').value = '';
+      document.getElementById('euRol').value = u[2];
+      document.getElementById('euArea').value = u[3];
+      document.getElementById('euEstado').value = u[4];
+      document.getElementById('modalEditarUsuario').classList.remove('hidden');
+      document.getElementById('modalEditarUsuario').classList.add('flex');
+    }
+
+    async function guardarEdicionUsuario() {
+      const u = {
+        usernameOriginal: document.getElementById('euLoginOriginal').value.trim(),
+        usernameNuevo: document.getElementById('euLoginNuevo').value.trim(),
+        nombre: document.getElementById('euNombre').value.trim(),
+        password: document.getElementById('euPassword').value.trim(),
+        rol: document.getElementById('euRol').value,
+        area: document.getElementById('euArea').value,
+        estado: document.getElementById('euEstado').value
+      };
+      const res = await llamarAPI({ action: 'editarUsuario', u, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('modalEditarUsuario').classList.add('hidden'); cargarDatos(); }
+    }
+
+    async function guardarNuevoUsuario() {
+      const u = {
+        nombre: document.getElementById('nuevoUserNombre').value.trim(),
+        username: document.getElementById('nuevoUserLogin').value.trim(),
+        password: document.getElementById('nuevoUserPass').value.trim(),
+        rol: document.getElementById('nuevoUserRol').value,
+        area: document.getElementById('nuevoUserArea').value
+      };
+      if (!u.nombre || !u.username || u.password.length < 6) return alert('Completa los datos (clave mín 6 caracteres).');
+      const res = await llamarAPI({ action: 'crearUsuario', u, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) cargarDatos();
+    }
+
+    function mostrarModalNuevoPatrimonio() {
+      document.getElementById('modalNuevoPatrimonio').classList.remove('hidden');
+      document.getElementById('modalNuevoPatrimonio').classList.add('flex');
+    }
+
+    async function crearBienPatrimonial() {
+      const item = {
+        codigo: document.getElementById('npCodigo').value.trim(),
+        descripcion: document.getElementById('npDesc').value.trim(),
+        marca: document.getElementById('npMarca').value.trim(),
+        modelo: document.getElementById('npModelo').value.trim(),
+        serie: document.getElementById('npSerie').value.trim(),
+        estado: document.getElementById('npEstado').value,
+        ubicacion: document.getElementById('npUbicacion').value,
+        responsable: document.getElementById('npResp').value.trim(),
+        observaciones: document.getElementById('npObs').value.trim()
+      };
+      const res = await llamarAPI({ action: 'registrarPatrimonio', item, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('modalNuevoPatrimonio').classList.add('hidden'); cargarDatos(); }
+    }
+
+    function mostrarModalNuevoMaterial() {
+      document.getElementById('modalNuevoMaterial').classList.remove('hidden');
+      document.getElementById('modalNuevoMaterial').classList.add('flex');
+    }
+
+    async function crearMaterialSKU() {
+      const mat = {
+        codigo: document.getElementById('nmCodigo').value.trim(),
+        descripcion: document.getElementById('nmDesc').value.trim(),
+        categoria: document.getElementById('nmCat').value,
+        unidad: document.getElementById('nmUnidad').value,
+        stockInicial: document.getElementById('nmStockIni').value || 0,
+        stockMinimo: document.getElementById('nmStockMin').value || 1,
+        ubicacion: document.getElementById('nmUbicacion').value
+      };
+      const res = await llamarAPI({ action: 'registrarMaterial', mat, usuarioAct: currentUser.username });
+      alert(res.message);
+      if (res.success) { document.getElementById('modalNuevoMaterial').classList.add('hidden'); cargarDatos(); }
+    }
+
+    // Registro de Service Worker para instalación como PWA
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "Inventario y Patrimonio - RECICLA MPCP",
+  "short_name": "RECICLA Inv",
+  "description": "Sistema de Control Patrimonial SIGA y Almacén - Programa RECICLA MPCP",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#166534",
+  "theme_color": "#166534",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3299/3299935.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3299/3299935.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
