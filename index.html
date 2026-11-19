@@ -182,11 +182,13 @@
             <input type="text" id="buscarMaterial" oninput="renderizarMateriales()" placeholder="Buscar material, bolsa, clavo, herramienta..." class="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[240px]">
             <select id="filtroCatMaterial" onchange="renderizarMateriales()" class="border rounded-lg px-3 py-2 text-sm">
               <option value="">Todas las Categorías</option>
-              <option value="Consumibles">Consumibles</option>
               <option value="Herramientas">Herramientas</option>
+              <option value="Equipos">Equipos</option>
+              <option value="EPP">EPP</option>
+              <option value="Materiales">Materiales</option>
+              <option value="Consumibles">Consumibles</option>
               <option value="Ferretería">Ferretería</option>
               <option value="Insumos">Insumos</option>
-              <option value="Materiales">Materiales</option>
             </select>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -315,9 +317,8 @@
             <div>
               <label class="block text-xs font-bold text-gray-600 mb-1">Ubicación Física / Sede</label>
               <select id="movPatUbicacion" class="w-full border rounded-lg p-2.5 text-sm">
-                <option value="POLVOS VERDES">POLVOS VERDES (Maestranza)</option>
-                <option value="CENTRO INTEGRAL DEL ADULTO MAYOR">CENTRO INTEGRAL ADULTO MAYOR</option>
-                <option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option>
+                <option value="MAESTRANZA">MAESTRANZA</option>
+                <option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option>
                 <option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option>
               </select>
             </div>
@@ -594,7 +595,7 @@
         <input type="text" id="epMarca" class="border rounded p-2"><input type="text" id="epModelo" class="border rounded p-2">
         <input type="text" id="epSerie" class="border rounded p-2">
         <select id="epEstado" class="border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
-        <select id="epUbicacion" class="border rounded p-2 col-span-2"><option value="POLVOS VERDES">POLVOS VERDES</option><option value="CENTRO INTEGRAL DEL ADULTO MAYOR">CENTRO INTEGRAL DEL ADULTO MAYOR</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option><option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option></select>
+        <select id="epUbicacion" class="border rounded p-2 col-span-2"><option value="MAESTRANZA">MAESTRANZA</option><option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option><option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option></select>
         <input type="text" id="epResp" class="border rounded p-2 col-span-2"><input type="text" id="epObs" class="border rounded p-2 col-span-2">
       </div>
       <div class="flex justify-end gap-2 pt-2">
@@ -607,15 +608,59 @@
   <!-- MODAL EDITAR MATERIAL -->
   <div id="modalEditarMaterial" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl">
-      <h3 class="font-bold text-gray-800 border-b pb-2">Editar Material SKU (Master)</h3>
+      <h3 class="font-bold text-gray-800 border-b pb-2"><i class="fas fa-pen-to-square text-amber-600 mr-2"></i>Editar Material SKU (Master)</h3>
       <input type="hidden" id="emCodigoOriginal"><input type="hidden" id="emDescOriginal">
       <div class="grid grid-cols-2 gap-2 text-sm">
-        <input type="text" id="emCodigoNuevo" class="border rounded p-2 font-mono font-bold">
-        <select id="emCat" class="border rounded p-2"><option value="Consumibles">Consumibles</option><option value="Herramientas">Herramientas</option><option value="Ferretería">Ferretería</option><option value="Insumos">Insumos</option><option value="Materiales">Materiales</option><option value="EPP">EPP</option></select>
-        <input type="text" id="emDesc" class="border rounded p-2 col-span-2">
-        <select id="emUnidad" class="border rounded p-2"><option value="Unidades">Unidades</option><option value="Cientos">Cientos</option><option value="Metros">Metros</option><option value="Litros">Litros</option><option value="Galones">Galones</option><option value="Kits">Kits</option><option value="Kilos">Kilos</option></select>
-        <select id="emUbicacion" class="border rounded p-2"><option value="ALMACÉN POLVOS VERDES">ALMACÉN POLVOS VERDES</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option></select>
-        <input type="number" id="emStockActual" class="border rounded p-2"><input type="number" id="emStockMin" class="border rounded p-2">
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Código SKU</label>
+          <input type="text" id="emCodigoNuevo" class="w-full border rounded p-2 font-mono font-bold">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Categoría</label>
+          <select id="emCat" class="w-full border rounded p-2">
+            <option value="Herramientas">Herramientas</option>
+            <option value="Equipos">Equipos</option>
+            <option value="EPP">EPP</option>
+            <option value="Materiales">Materiales</option>
+            <option value="Consumibles">Consumibles</option>
+            <option value="Ferretería">Ferretería</option>
+            <option value="Insumos">Insumos</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Descripción</label>
+          <input type="text" id="emDesc" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Sede Física</label>
+          <select id="emSede" onchange="actualizarSubAlmacenes('em')" class="w-full border rounded p-2">
+            <option value="MAESTRANZA">MAESTRANZA</option>
+            <option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Almacén Interno</label>
+          <select id="emSubAlmacen" onchange="toggleSubAlmacenOtro('em')" class="w-full border rounded p-2"></select>
+        </div>
+        <div id="emSubAlmacenOtroBox" class="col-span-2 hidden">
+          <input type="text" id="emSubAlmacenOtro" placeholder="Especifica el nombre del almacén interno..." class="w-full border rounded p-2 text-xs">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Unidad</label>
+          <select id="emUnidad" class="w-full border rounded p-2">
+            <option value="Unidades">Unidades</option><option value="Cientos">Cientos</option><option value="Metros">Metros</option><option value="Litros">Litros</option><option value="Galones">Galones</option><option value="Kits">Kits</option><option value="Kilos">Kilos</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <div>
+            <label class="text-[11px] font-bold text-gray-500">Stock Act.</label>
+            <input type="number" id="emStockActual" class="w-full border rounded p-2">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-500">Stock Mín.</label>
+            <input type="number" id="emStockMin" class="w-full border rounded p-2">
+          </div>
+        </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalEditarMaterial').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
@@ -656,7 +701,7 @@
         <input type="text" id="npMarca" placeholder="Marca" class="border rounded p-2"><input type="text" id="npModelo" placeholder="Modelo" class="border rounded p-2">
         <input type="text" id="npSerie" placeholder="Serie o Placa" class="border rounded p-2">
         <select id="npEstado" class="border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
-        <select id="npUbicacion" class="border rounded p-2 col-span-2"><option value="POLVOS VERDES">POLVOS VERDES</option><option value="CENTRO INTEGRAL DEL ADULTO MAYOR">CENTRO INTEGRAL ADULTO MAYOR</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option></select>
+        <select id="npUbicacion" class="border rounded p-2 col-span-2"><option value="MAESTRANZA">MAESTRANZA</option><option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option></select>
         <input type="text" id="npResp" value="Omar Ushiñahua Rucoba" class="border rounded p-2 col-span-2">
         <input type="text" id="npObs" placeholder="Observaciones iniciales" class="border rounded p-2 col-span-2">
       </div>
@@ -667,21 +712,93 @@
     </div>
   </div>
 
-  <!-- MODAL NUEVO MATERIAL -->
+  <!-- MODAL NUEVO MATERIAL (CÓDIGO AUTOMÁTICO + SEDE/SUB-ALMACÉN) -->
   <div id="modalNuevoMaterial" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3">
-      <h3 class="font-bold text-gray-800 border-b pb-2">Crear Nuevo Material en Almacén</h3>
-      <div class="grid grid-cols-2 gap-2 text-sm">
-        <input type="text" id="nmCodigo" placeholder="Código SKU (Ej: MAT-015)" class="border rounded p-2">
-        <select id="nmCat" class="border rounded p-2"><option value="Consumibles">Consumibles</option><option value="Herramientas">Herramientas</option><option value="Ferretería">Ferretería</option><option value="Insumos">Insumos</option><option value="Materiales">Materiales</option><option value="EPP">EPP</option></select>
-        <input type="text" id="nmDesc" placeholder="Descripción del Material" class="border rounded p-2 col-span-2">
-        <select id="nmUnidad" class="border rounded p-2"><option value="Unidades">Unidades</option><option value="Cientos">Cientos</option><option value="Metros">Metros</option><option value="Litros">Litros</option><option value="Galones">Galones</option><option value="Kits">Kits</option><option value="Kilos">Kilos</option></select>
-        <select id="nmUbicacion" class="border rounded p-2"><option value="ALMACÉN POLVOS VERDES">ALMACÉN POLVOS VERDES</option><option value="PLANTA VALORIZACIÓN">PLANTA VALORIZACIÓN</option></select>
-        <input type="number" id="nmStockIni" placeholder="Stock Inicial" class="border rounded p-2"><input type="number" id="nmStockMin" placeholder="Stock Mínimo" class="border rounded p-2">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <h3 class="font-bold text-gray-800 border-b pb-2"><i class="fas fa-boxes-packing text-green-700 mr-2"></i>Crear Nuevo Material en Almacén</h3>
+      <div class="grid grid-cols-2 gap-2.5 text-sm">
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-600 uppercase">Tipo de Control</label>
+          <select id="nmTipoControl" onchange="actualizarFormularioNuevoMaterial()" class="w-full border-2 border-green-600 rounded-lg p-2 font-semibold text-gray-800 bg-green-50/40">
+            <option value="REUTILIZABLE">Reutilizable / Retornable (Ej: Martillo, pala — Cód: INHEPV-01)</option>
+            <option value="CONSUMIBLE">Consumible / No retornable (Ej: Clavos, pintura — Cód: MAT-013)</option>
+          </select>
+        </div>
+
+        <div id="nmActividadBox">
+          <label class="text-[11px] font-bold text-gray-500">Actividad</label>
+          <select id="nmActividad" onchange="generarCodigoMaterialAuto()" class="w-full border rounded p-2">
+            <option value="IN">Inorgánicos (IN)</option>
+            <option value="OR">Orgánicos (OR)</option>
+            <option value="PC">Puntos Críticos (PC)</option>
+            <option value="GE">General (GE)</option>
+          </select>
+        </div>
+
+        <div id="nmCatBox">
+          <label class="text-[11px] font-bold text-gray-500">Categoría</label>
+          <select id="nmCat" onchange="generarCodigoMaterialAuto()" class="w-full border rounded p-2">
+            <option value="Herramientas">Herramientas (HE)</option>
+            <option value="Equipos">Equipos (EQ)</option>
+            <option value="EPP">EPP (EP)</option>
+            <option value="Materiales">Materiales (MA)</option>
+            <option value="Consumibles">Consumibles (CO)</option>
+            <option value="Ferretería">Ferretería (FE)</option>
+            <option value="Insumos">Insumos (IN)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Sede Física</label>
+          <select id="nmSede" onchange="actualizarSubAlmacenes('nm'); generarCodigoMaterialAuto();" class="w-full border rounded p-2">
+            <option value="MAESTRANZA">MAESTRANZA (MA)</option>
+            <option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN (PV)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Almacén Interno</label>
+          <select id="nmSubAlmacen" onchange="toggleSubAlmacenOtro('nm')" class="w-full border rounded p-2"></select>
+        </div>
+
+        <div id="nmSubAlmacenOtroBox" class="col-span-2 hidden">
+          <input type="text" id="nmSubAlmacenOtro" placeholder="Escribe el nombre del nuevo almacén interno..." class="w-full border rounded p-2 text-xs">
+        </div>
+
+        <div class="col-span-2 bg-gray-50 border rounded-lg p-2.5 flex items-center justify-between gap-2">
+          <div class="flex-1">
+            <label class="text-[10px] font-bold text-green-800 uppercase block">Código SKU Generado Automáticamente</label>
+            <input type="text" id="nmCodigo" class="w-full bg-transparent font-mono font-extrabold text-base text-green-900 focus:outline-none" title="Se genera automáticamente, pero puedes editarlo si deseas">
+          </div>
+          <span class="bg-green-100 text-green-800 text-[10px] font-extrabold px-2 py-1 rounded uppercase">AUTO</span>
+        </div>
+
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Descripción del Material / Herramienta</label>
+          <input type="text" id="nmDesc" placeholder="Ej: MARTILLO CARPINTERO DE UÑA" class="w-full border rounded p-2">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Unidad de Medida</label>
+          <select id="nmUnidad" class="w-full border rounded p-2">
+            <option value="Unidades">Unidades</option><option value="Cientos">Cientos</option><option value="Metros">Metros</option><option value="Litros">Litros</option><option value="Galones">Galones</option><option value="Kits">Kits</option><option value="Kilos">Kilos</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-1.5">
+          <div>
+            <label class="text-[11px] font-bold text-gray-500">Stock Inicial</label>
+            <input type="number" id="nmStockIni" value="1" min="0" class="w-full border rounded p-2">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-500">Stock Mín.</label>
+            <input type="number" id="nmStockMin" value="1" min="0" class="w-full border rounded p-2">
+          </div>
+        </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalNuevoMaterial').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
-        <button onclick="crearMaterialSKU()" class="px-4 py-2 bg-green-700 text-white rounded text-sm font-bold">Guardar Material</button>
+        <button onclick="crearMaterialSKU()" class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded text-sm font-bold shadow">Guardar Material</button>
       </div>
     </div>
   </div>
@@ -1194,6 +1311,110 @@
       if (res.success) { document.getElementById('modalEditarPatrimonio').classList.add('hidden'); cargarDatos(); }
     }
 
+    // SUB-ALMACENES POR SEDE Y GENERADOR AUTOMÁTICO DE SKU
+    const SUB_ALMACENES_POR_SEDE = {
+      'MAESTRANZA': ['Almacén Principal'],
+      'PLANTA DE VALORIZACIÓN': ['Almacén de Oficina', 'Almacén Casa / Salida de Planta']
+    };
+
+    const MAP_CAT_INICIALES = {
+      'Herramientas': 'HE',
+      'Equipos': 'EQ',
+      'EPP': 'EP',
+      'Materiales': 'MA',
+      'Consumibles': 'CO',
+      'Ferretería': 'FE',
+      'Insumos': 'IN'
+    };
+
+    const MAP_SEDE_INICIALES = {
+      'MAESTRANZA': 'MA',
+      'PLANTA DE VALORIZACIÓN': 'PV'
+    };
+
+    function actualizarSubAlmacenes(prefijo, valorPreseleccionado) {
+      const sede = document.getElementById(prefijo + 'Sede').value;
+      const selSub = document.getElementById(prefijo + 'SubAlmacen');
+      const opciones = SUB_ALMACENES_POR_SEDE[sede] || ['Almacén Principal'];
+      selSub.innerHTML = '';
+      opciones.forEach(op => selSub.add(new Option(op, op)));
+      selSub.add(new Option('Otro (especificar)...', '__OTRO__'));
+
+      if (valorPreseleccionado) {
+        if (opciones.includes(valorPreseleccionado)) {
+          selSub.value = valorPreseleccionado;
+          document.getElementById(prefijo + 'SubAlmacenOtroBox').classList.add('hidden');
+        } else {
+          selSub.value = '__OTRO__';
+          document.getElementById(prefijo + 'SubAlmacenOtro').value = valorPreseleccionado;
+          document.getElementById(prefijo + 'SubAlmacenOtroBox').classList.remove('hidden');
+        }
+      } else {
+        document.getElementById(prefijo + 'SubAlmacenOtroBox').classList.add('hidden');
+        document.getElementById(prefijo + 'SubAlmacenOtro').value = '';
+      }
+    }
+
+    function toggleSubAlmacenOtro(prefijo) {
+      const val = document.getElementById(prefijo + 'SubAlmacen').value;
+      const box = document.getElementById(prefijo + 'SubAlmacenOtroBox');
+      if (val === '__OTRO__') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function obtenerUbicacionCompleta(prefijo) {
+      const sede = document.getElementById(prefijo + 'Sede').value;
+      const subVal = document.getElementById(prefijo + 'SubAlmacen').value;
+      const subFinal = (subVal === '__OTRO__')
+        ? (document.getElementById(prefijo + 'SubAlmacenOtro').value.trim() || 'Almacén')
+        : subVal;
+      return `${sede} — ${subFinal}`;
+    }
+
+    function actualizarFormularioNuevoMaterial() {
+      const tipo = document.getElementById('nmTipoControl').value;
+      const actBox = document.getElementById('nmActividadBox');
+      const catBox = document.getElementById('nmCatBox');
+      if (tipo === 'CONSUMIBLE') {
+        actBox.classList.add('hidden');
+        catBox.classList.add('col-span-2');
+      } else {
+        actBox.classList.remove('hidden');
+        catBox.classList.remove('col-span-2');
+      }
+      generarCodigoMaterialAuto();
+    }
+
+    function generarCodigoMaterialAuto() {
+      const tipo = document.getElementById('nmTipoControl').value;
+      if (tipo === 'CONSUMIBLE') {
+        let maxNum = 0;
+        db.materiales.forEach(m => {
+          const match = String(m[0]).toUpperCase().match(/^MAT-(\d+)$/);
+          if (match) {
+            const n = parseInt(match[1], 10);
+            if (n > maxNum) maxNum = n;
+          }
+        });
+        document.getElementById('nmCodigo').value = 'MAT-' + String(maxNum + 1).padStart(3, '0');
+      } else {
+        const act = document.getElementById('nmActividad').value || 'GE';
+        const cat = MAP_CAT_INICIALES[document.getElementById('nmCat').value] || 'MA';
+        const sede = MAP_SEDE_INICIALES[document.getElementById('nmSede').value] || 'MA';
+        const prefijo = act + cat + sede;
+        const regex = new RegExp('^' + prefijo + '-(\d+)$', 'i');
+        let maxNum = 0;
+        db.materiales.forEach(m => {
+          const match = String(m[0]).toUpperCase().match(regex);
+          if (match) {
+            const n = parseInt(match[1], 10);
+            if (n > maxNum) maxNum = n;
+          }
+        });
+        document.getElementById('nmCodigo').value = prefijo + '-' + String(maxNum + 1).padStart(2, '0');
+      }
+    }
+
     function abrirModalEditarMaterial(sku) {
       const m = db.materiales.find(i => String(i[0]) === String(sku));
       if (!m) return;
@@ -1205,7 +1426,16 @@
       document.getElementById('emUnidad').value = m[3];
       document.getElementById('emStockActual').value = m[4];
       document.getElementById('emStockMin').value = m[5];
-      document.getElementById('emUbicacion').value = m[6];
+
+      // Parsear Sede y Sub-Almacén
+      const ubiRaw = String(m[6] || '');
+      const esPlanta = /PLANTA/i.test(ubiRaw);
+      document.getElementById('emSede').value = esPlanta ? 'PLANTA DE VALORIZACIÓN' : 'MAESTRANZA';
+      let subActual = '';
+      if (ubiRaw.includes('—')) subActual = ubiRaw.split('—')[1].trim();
+      else if (ubiRaw.includes(' - ')) subActual = ubiRaw.split(' - ')[1].trim();
+      actualizarSubAlmacenes('em', subActual);
+
       document.getElementById('modalEditarMaterial').classList.remove('hidden');
       document.getElementById('modalEditarMaterial').classList.add('flex');
     }
@@ -1220,7 +1450,7 @@
         unidad: document.getElementById('emUnidad').value,
         stockActual: document.getElementById('emStockActual').value,
         stockMinimo: document.getElementById('emStockMin').value,
-        ubicacion: document.getElementById('emUbicacion').value
+        ubicacion: obtenerUbicacionCompleta('em')
       };
       const res = await llamarAPI({ action: 'editarMaterial', mat, usuarioAct: currentUser.username });
       alert(res.message);
@@ -1405,6 +1635,11 @@
     }
 
     function mostrarModalNuevoMaterial() {
+      document.getElementById('nmDesc').value = '';
+      document.getElementById('nmStockIni').value = 1;
+      document.getElementById('nmStockMin').value = 1;
+      actualizarSubAlmacenes('nm');
+      actualizarFormularioNuevoMaterial();
       document.getElementById('modalNuevoMaterial').classList.remove('hidden');
       document.getElementById('modalNuevoMaterial').classList.add('flex');
     }
@@ -1417,8 +1652,9 @@
         unidad: document.getElementById('nmUnidad').value,
         stockInicial: document.getElementById('nmStockIni').value || 0,
         stockMinimo: document.getElementById('nmStockMin').value || 1,
-        ubicacion: document.getElementById('nmUbicacion').value
+        ubicacion: obtenerUbicacionCompleta('nm')
       };
+      if (!mat.codigo || !mat.descripcion) return alert('Completa la descripción del material.');
       const res = await llamarAPI({ action: 'registrarMaterial', mat, usuarioAct: currentUser.username });
       alert(res.message);
       if (res.success) { document.getElementById('modalNuevoMaterial').classList.add('hidden'); cargarDatos(); }
