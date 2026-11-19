@@ -316,6 +316,14 @@
         <div class="bg-white p-4 rounded-xl shadow flex flex-wrap justify-between items-center gap-3">
           <div class="flex flex-wrap gap-2 flex-1">
             <input type="text" id="buscarPatrimonio" oninput="renderizarPatrimonio()" placeholder="Buscar por código SIGA, placa, descripción o responsable..." class="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[240px]">
+            <select id="filtroAreaPatrimonio" onchange="renderizarPatrimonio()" class="border rounded-lg px-3 py-2 text-sm">
+              <option value="">Todas las Áreas Resp.</option>
+              <option value="Inorgánicos">Inorgánicos</option>
+              <option value="Orgánicos">Orgánicos</option>
+              <option value="Puntos Críticos">Puntos Críticos</option>
+              <option value="Administración / Coordinación">Administración / Coordinación</option>
+              <option value="Uso Compartido">Uso Compartido</option>
+            </select>
             <select id="filtroEstadoPatrimonio" onchange="renderizarPatrimonio()" class="border rounded-lg px-3 py-2 text-sm">
               <option value="">Todos los Estados</option>
               <option value="Bueno">Bueno</option>
@@ -348,6 +356,7 @@
                 <th class="p-3">Cód. Patrimonial</th>
                 <th class="p-3">Descripción (Clic para Historial)</th>
                 <th class="p-3">Marca / Modelo / Placa</th>
+                <th class="p-3">Área Responsable</th>
                 <th class="p-3">Ubicación Física</th>
                 <th class="p-3">Estado</th>
                 <th class="p-3">Último Responsable</th>
@@ -499,13 +508,20 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">Ubicación Física / Sede</label>
-              <select id="movPatUbicacion" class="w-full border rounded-lg p-2.5 text-sm">
+              <label class="block text-xs font-bold text-gray-600 mb-1">Sede Física</label>
+              <select id="movPatSede" onchange="actualizarAmbientesPatrimonio('movPat')" class="w-full border rounded-lg p-2.5 text-sm">
                 <option value="MAESTRANZA">MAESTRANZA</option>
                 <option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option>
                 <option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option>
               </select>
             </div>
+          </div>
+          <div id="movPatAmbienteBox">
+            <label class="block text-xs font-bold text-gray-600 mb-1">Almacén / Ambiente Interno</label>
+            <select id="movPatAmbiente" onchange="toggleAmbientePatOtro('movPat')" class="w-full border rounded-lg p-2.5 text-sm"></select>
+          </div>
+          <div id="movPatAmbienteOtroBox" class="hidden">
+            <input type="text" id="movPatAmbienteOtro" placeholder="Especifica el ambiente o almacén..." class="w-full border rounded-lg p-2.5 text-xs">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -770,17 +786,67 @@
 
   <!-- MODAL EDITAR PATRIMONIO -->
   <div id="modalEditarPatrimonio" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl">
-      <h3 class="font-bold text-gray-800 border-b pb-2">Editar Bien Patrimonial (Master)</h3>
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <h3 class="font-bold text-gray-800 border-b pb-2"><i class="fas fa-pen-to-square text-amber-600 mr-2"></i>Editar Bien Patrimonial (Master)</h3>
       <input type="hidden" id="epCodigoOriginal"><input type="hidden" id="epDescOriginal">
       <div class="grid grid-cols-2 gap-2 text-sm">
-        <input type="text" id="epCodigoNuevo" class="border rounded p-2 col-span-2 font-mono font-bold">
-        <input type="text" id="epDesc" class="border rounded p-2 col-span-2">
-        <input type="text" id="epMarca" class="border rounded p-2"><input type="text" id="epModelo" class="border rounded p-2">
-        <input type="text" id="epSerie" class="border rounded p-2">
-        <select id="epEstado" class="border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
-        <select id="epUbicacion" class="border rounded p-2 col-span-2"><option value="MAESTRANZA">MAESTRANZA</option><option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option><option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option></select>
-        <input type="text" id="epResp" class="border rounded p-2 col-span-2"><input type="text" id="epObs" class="border rounded p-2 col-span-2">
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Código Patrimonial (SIGA)</label>
+          <input type="text" id="epCodigoNuevo" class="w-full border rounded p-2 font-mono font-bold">
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Descripción del Bien</label>
+          <input type="text" id="epDesc" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Marca</label>
+          <input type="text" id="epMarca" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Modelo</label>
+          <input type="text" id="epModelo" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Serie / Placa</label>
+          <input type="text" id="epSerie" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Estado</label>
+          <select id="epEstado" class="w-full border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Área Responsable</label>
+          <select id="epAreaResp" class="w-full border rounded p-2">
+            <option value="Inorgánicos">Inorgánicos</option>
+            <option value="Orgánicos">Orgánicos</option>
+            <option value="Puntos Críticos">Puntos Críticos</option>
+            <option value="Administración / Coordinación">Administración / Coordinación</option>
+            <option value="Uso Compartido">Uso Compartido</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Sede Física</label>
+          <select id="epSede" onchange="actualizarAmbientesPatrimonio('ep')" class="w-full border rounded p-2">
+            <option value="MAESTRANZA">MAESTRANZA</option>
+            <option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option>
+            <option value="EN RUTA / CAMPO">EN RUTA / CAMPO</option>
+          </select>
+        </div>
+        <div id="epAmbienteBox">
+          <label class="text-[11px] font-bold text-gray-500">Almacén / Ambiente</label>
+          <select id="epAmbiente" onchange="toggleAmbientePatOtro('ep')" class="w-full border rounded p-2"></select>
+        </div>
+        <div id="epAmbienteOtroBox" class="col-span-2 hidden">
+          <input type="text" id="epAmbienteOtro" placeholder="Especifica el almacén o ambiente interno..." class="w-full border rounded p-2 text-xs">
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Último Responsable</label>
+          <input type="text" id="epResp" class="w-full border rounded p-2">
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Observaciones</label>
+          <input type="text" id="epObs" class="w-full border rounded p-2">
+        </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalEditarPatrimonio').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
@@ -877,17 +943,65 @@
 
   <!-- MODAL NUEVO PATRIMONIO -->
   <div id="modalNuevoPatrimonio" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3">
-      <h3 class="font-bold text-gray-800 border-b pb-2">Registrar Nuevo Bien Patrimonial (SIGA)</h3>
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-3 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <h3 class="font-bold text-gray-800 border-b pb-2"><i class="fas fa-truck-pickup text-green-700 mr-2"></i>Registrar Nuevo Bien Patrimonial (SIGA)</h3>
       <div class="grid grid-cols-2 gap-2 text-sm">
-        <input type="text" id="npCodigo" placeholder="Cód. Patrimonial (12 dígitos)" class="border rounded p-2 col-span-2">
-        <input type="text" id="npDesc" placeholder="Descripción del Bien" class="border rounded p-2 col-span-2">
-        <input type="text" id="npMarca" placeholder="Marca" class="border rounded p-2"><input type="text" id="npModelo" placeholder="Modelo" class="border rounded p-2">
-        <input type="text" id="npSerie" placeholder="Serie o Placa" class="border rounded p-2">
-        <select id="npEstado" class="border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
-        <select id="npUbicacion" class="border rounded p-2 col-span-2"><option value="MAESTRANZA">MAESTRANZA</option><option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option></select>
-        <input type="text" id="npResp" value="Omar Ushiñahua Rucoba" class="border rounded p-2 col-span-2">
-        <input type="text" id="npObs" placeholder="Observaciones iniciales" class="border rounded p-2 col-span-2">
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Código Patrimonial (SIGA)</label>
+          <input type="text" id="npCodigo" placeholder="Cód. Patrimonial (12 dígitos)" class="w-full border rounded p-2">
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Descripción del Bien</label>
+          <input type="text" id="npDesc" placeholder="Descripción del Bien" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Marca</label>
+          <input type="text" id="npMarca" placeholder="Marca" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Modelo</label>
+          <input type="text" id="npModelo" placeholder="Modelo" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Serie o Placa</label>
+          <input type="text" id="npSerie" placeholder="Serie o Placa" class="w-full border rounded p-2">
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Estado</label>
+          <select id="npEstado" class="w-full border rounded p-2"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Área Responsable</label>
+          <select id="npAreaResp" class="w-full border rounded p-2">
+            <option value="Inorgánicos">Inorgánicos</option>
+            <option value="Orgánicos">Orgánicos</option>
+            <option value="Puntos Críticos">Puntos Críticos</option>
+            <option value="Administración / Coordinación">Administración / Coordinación</option>
+            <option value="Uso Compartido" selected>Uso Compartido</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-gray-500">Sede Física</label>
+          <select id="npSede" onchange="actualizarAmbientesPatrimonio('np')" class="w-full border rounded p-2">
+            <option value="MAESTRANZA">MAESTRANZA</option>
+            <option value="PLANTA DE VALORIZACIÓN">PLANTA DE VALORIZACIÓN</option>
+          </select>
+        </div>
+        <div id="npAmbienteBox">
+          <label class="text-[11px] font-bold text-gray-500">Almacén / Ambiente</label>
+          <select id="npAmbiente" onchange="toggleAmbientePatOtro('np')" class="w-full border rounded p-2"></select>
+        </div>
+        <div id="npAmbienteOtroBox" class="col-span-2 hidden">
+          <input type="text" id="npAmbienteOtro" placeholder="Especifica el almacén o ambiente interno..." class="w-full border rounded p-2 text-xs">
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Responsable Inicial</label>
+          <input type="text" id="npResp" value="Omar Ushiñahua Rucoba" class="w-full border rounded p-2">
+        </div>
+        <div class="col-span-2">
+          <label class="text-[11px] font-bold text-gray-500">Observaciones iniciales</label>
+          <input type="text" id="npObs" placeholder="Observaciones iniciales" class="w-full border rounded p-2">
+        </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalNuevoPatrimonio').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
@@ -1454,6 +1568,7 @@
         'Marca': p[2],
         'Modelo': p[3],
         'Serie / Placa': p[4],
+        'Área Responsable': p[11] || 'Uso Compartido',
         'Ubicación Física': p[5],
         'Estado': p[6],
         'En Uso': p[7],
@@ -1498,16 +1613,21 @@
     function renderizarPatrimonio() {
       const q = document.getElementById('buscarPatrimonio').value.toLowerCase();
       const est = document.getElementById('filtroEstadoPatrimonio').value;
+      const areaF = document.getElementById('filtroAreaPatrimonio') ? document.getElementById('filtroAreaPatrimonio').value : '';
       const tbody = document.getElementById('tablaPatrimonio');
       tbody.innerHTML = '';
       const esMaster = currentUser && currentUser.rol === 'MASTER';
 
       db.patrimonio.filter(p => {
-        const matchQ = String(p[0]).toLowerCase().includes(q) || String(p[1]).toLowerCase().includes(q) || String(p[4]).toLowerCase().includes(q) || String(p[8]).toLowerCase().includes(q);
+        const areaResp = String(p[11] || 'Uso Compartido');
+        const matchQ = String(p[0]).toLowerCase().includes(q) || String(p[1]).toLowerCase().includes(q) || String(p[4]).toLowerCase().includes(q) || String(p[5]).toLowerCase().includes(q) || String(p[8]).toLowerCase().includes(q) || areaResp.toLowerCase().includes(q);
         const matchE = !est || p[6] === est;
-        return matchQ && matchE;
+        const matchA = !areaF || areaResp === areaF;
+        return matchQ && matchE && matchA;
       }).forEach(p => {
         const badge = p[6] === 'Bueno' ? 'bg-green-100 text-green-800' : (p[6] === 'Regular' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
+        const areaResp = String(p[11] || 'Sin asignar');
+        const areaBadge = areaResp === 'Sin asignar' ? 'bg-gray-100 text-gray-500' : 'bg-indigo-50 text-indigo-800 border border-indigo-200';
         const descSafe = String(p[1]).replace(/'/g, "\'");
         const botonesMaster = esMaster ? `
           <button onclick="abrirModalEditarPatrimonio('${p[0]}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded text-xs font-bold ml-1"><i class="fas fa-edit"></i></button>
@@ -1522,6 +1642,7 @@
               </button>
             </td>
             <td class="p-3 text-xs text-gray-600">${p[2]} / ${p[3]} <br><b>Serie/Placa: ${p[4]}</b></td>
+            <td class="p-3"><span class="px-2 py-1 rounded-md text-[11px] font-bold ${areaBadge} whitespace-nowrap">${areaResp}</span></td>
             <td class="p-3 text-xs">${p[5]}</td>
             <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-bold ${badge}">${p[6]}</span></td>
             <td class="p-3 text-xs font-medium">${p[8]}</td>
@@ -1712,7 +1833,7 @@
         document.getElementById('scanTipoBadge').innerText = 'BIEN PATRIMONIAL (SIGA)';
         document.getElementById('scanTituloDesc').innerText = pat[1];
         document.getElementById('scanSubCodigo').innerText = `Cód. Patrimonial: ${pat[0]} | Serie/Placa: ${pat[4]}`;
-        document.getElementById('scanResumenDatos').innerHTML = `<div><b>Marca / Modelo:</b> ${pat[2]} / ${pat[3]}</div><div><b>Ubicación Actual:</b> ${pat[5]}</div><div><b>Estado Físico:</b> <b>${pat[6]}</b></div><div><b>Último Responsable:</b> ${pat[8]}</div>`;
+        document.getElementById('scanResumenDatos').innerHTML = `<div><b>Marca / Modelo:</b> ${pat[2]} / ${pat[3]}</div><div><b>Área Responsable:</b> ${pat[11] || 'Uso Compartido'}</div><div><b>Ubicación Actual:</b> ${pat[5]}</div><div><b>Estado Físico:</b> <b>${pat[6]}</b></div><div><b>Último Responsable:</b> ${pat[8]}</div>`;
         document.getElementById('modalDecisionScan').classList.remove('hidden');
         document.getElementById('modalDecisionScan').classList.add('flex');
         return;
@@ -1781,6 +1902,79 @@
       if (res.success) { cerrarModalEliminar(); cargarDatos(); }
     }
 
+    // AMBIENTES / ALMACENES INTERNOS PARA BIENES PATRIMONIALES
+    const AMBIENTES_PATRIMONIO_POR_SEDE = {
+      'MAESTRANZA': ['Patio / General', 'Almacén Principal'],
+      'PLANTA DE VALORIZACIÓN': ['Patio / General', 'Almacén de Oficina', 'Almacén Casa / Salida de Planta']
+    };
+
+    function actualizarAmbientesPatrimonio(prefijo, valorPreseleccionado) {
+      const sede = document.getElementById(prefijo + 'Sede').value;
+      const box = document.getElementById(prefijo + 'AmbienteBox');
+      const otroBox = document.getElementById(prefijo + 'AmbienteOtroBox');
+      const otroInp = document.getElementById(prefijo + 'AmbienteOtro');
+
+      if (sede === 'EN RUTA / CAMPO') {
+        box.classList.add('hidden');
+        otroBox.classList.add('hidden');
+        otroInp.value = '';
+        return;
+      }
+
+      box.classList.remove('hidden');
+      const selAmb = document.getElementById(prefijo + 'Ambiente');
+      const opciones = AMBIENTES_PATRIMONIO_POR_SEDE[sede] || ['Patio / General'];
+      selAmb.innerHTML = '';
+      opciones.forEach(op => selAmb.add(new Option(op, op)));
+      selAmb.add(new Option('Otro (especificar)...', '__OTRO__'));
+
+      if (valorPreseleccionado) {
+        if (opciones.includes(valorPreseleccionado)) {
+          selAmb.value = valorPreseleccionado;
+          otroBox.classList.add('hidden');
+        } else {
+          selAmb.value = '__OTRO__';
+          otroInp.value = valorPreseleccionado;
+          otroBox.classList.remove('hidden');
+        }
+      } else {
+        otroBox.classList.add('hidden');
+        otroInp.value = '';
+      }
+    }
+
+    function toggleAmbientePatOtro(prefijo) {
+      const val = document.getElementById(prefijo + 'Ambiente').value;
+      const box = document.getElementById(prefijo + 'AmbienteOtroBox');
+      if (val === '__OTRO__') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function obtenerUbicacionPatrimonioCompleta(prefijo) {
+      const sede = document.getElementById(prefijo + 'Sede').value;
+      if (sede === 'EN RUTA / CAMPO') return 'EN RUTA / CAMPO';
+      const ambVal = document.getElementById(prefijo + 'Ambiente').value;
+      const ambFinal = (ambVal === '__OTRO__')
+        ? (document.getElementById(prefijo + 'AmbienteOtro').value.trim() || 'General')
+        : ambVal;
+      return `${sede} — ${ambFinal}`;
+    }
+
+    function cargarUbicacionPatrimonioEnSelects(prefijo, ubicacionRaw) {
+      const raw = String(ubicacionRaw || '');
+      const selSede = document.getElementById(prefijo + 'Sede');
+      if (/ruta|campo/i.test(raw)) {
+        selSede.value = 'EN RUTA / CAMPO';
+        actualizarAmbientesPatrimonio(prefijo);
+        return;
+      }
+      selSede.value = /planta/i.test(raw) ? 'PLANTA DE VALORIZACIÓN' : 'MAESTRANZA';
+      let ambActual = 'Patio / General';
+      if (raw.includes('—')) ambActual = raw.split('—')[1].trim();
+      else if (raw.includes(' - ')) ambActual = raw.split(' - ')[1].trim();
+      actualizarAmbientesPatrimonio(prefijo, ambActual);
+    }
+
     function abrirModalEditarPatrimonio(codigo) {
       const p = db.patrimonio.find(i => String(i[0]) === String(codigo));
       if (!p) return;
@@ -1791,8 +1985,9 @@
       document.getElementById('epMarca').value = p[2];
       document.getElementById('epModelo').value = p[3];
       document.getElementById('epSerie').value = p[4];
-      document.getElementById('epUbicacion').value = p[5];
       document.getElementById('epEstado').value = p[6];
+      document.getElementById('epAreaResp').value = p[11] || 'Uso Compartido';
+      cargarUbicacionPatrimonioEnSelects('ep', p[5]);
       document.getElementById('epResp').value = p[8];
       document.getElementById('epObs').value = p[9] || '';
       document.getElementById('modalEditarPatrimonio').classList.remove('hidden');
@@ -1808,8 +2003,9 @@
         marca: document.getElementById('epMarca').value.trim(),
         modelo: document.getElementById('epModelo').value.trim(),
         serie: document.getElementById('epSerie').value.trim(),
-        ubicacion: document.getElementById('epUbicacion').value,
+        ubicacion: obtenerUbicacionPatrimonioCompleta('ep'),
         estado: document.getElementById('epEstado').value,
+        areaResponsable: document.getElementById('epAreaResp').value,
         responsable: document.getElementById('epResp').value.trim(),
         observaciones: document.getElementById('epObs').value.trim()
       };
@@ -1998,9 +2194,11 @@
       const cod = document.getElementById('movPatCodigo').value;
       const item = db.patrimonio.find(p => String(p[0]) === String(cod));
       if (item) {
-        document.getElementById('movPatUbicacion').value = item[5];
+        cargarUbicacionPatrimonioEnSelects('movPat', item[5]);
         document.getElementById('movPatEstado').value = item[6];
         document.getElementById('movPatPersonal').value = item[8];
+      } else {
+        actualizarAmbientesPatrimonio('movPat');
       }
     }
 
@@ -2036,7 +2234,7 @@
         accion: document.getElementById('movPatAccion').value,
         estado: document.getElementById('movPatEstado').value,
         areaUso: document.getElementById('movPatArea').value,
-        ubicacion: document.getElementById('movPatUbicacion').value,
+        ubicacion: obtenerUbicacionPatrimonioCompleta('movPat'),
         supervisor: document.getElementById('movPatSupervisor').value.trim() || currentUser.nombre,
         personalUsuario: document.getElementById('movPatPersonal').value.trim() || currentUser.nombre,
         observaciones: document.getElementById('movPatObs').value.trim()
@@ -2120,6 +2318,15 @@
     }
 
     function mostrarModalNuevoPatrimonio() {
+      document.getElementById('npCodigo').value = '';
+      document.getElementById('npDesc').value = '';
+      document.getElementById('npMarca').value = '';
+      document.getElementById('npModelo').value = '';
+      document.getElementById('npSerie').value = '';
+      document.getElementById('npObs').value = '';
+      document.getElementById('npAreaResp').value = 'Uso Compartido';
+      document.getElementById('npSede').value = 'MAESTRANZA';
+      actualizarAmbientesPatrimonio('np');
       document.getElementById('modalNuevoPatrimonio').classList.remove('hidden');
       document.getElementById('modalNuevoPatrimonio').classList.add('flex');
     }
@@ -2132,10 +2339,12 @@
         modelo: document.getElementById('npModelo').value.trim(),
         serie: document.getElementById('npSerie').value.trim(),
         estado: document.getElementById('npEstado').value,
-        ubicacion: document.getElementById('npUbicacion').value,
+        areaResponsable: document.getElementById('npAreaResp').value,
+        ubicacion: obtenerUbicacionPatrimonioCompleta('np'),
         responsable: document.getElementById('npResp').value.trim(),
         observaciones: document.getElementById('npObs').value.trim()
       };
+      if (!item.codigo || !item.descripcion) return alert('Completa el código patrimonial y la descripción.');
       const res = await llamarAPI({ action: 'registrarPatrimonio', item, usuarioAct: currentUser.username });
       alert(res.message);
       if (res.success) { document.getElementById('modalNuevoPatrimonio').classList.add('hidden'); cargarDatos(); }
@@ -2339,10 +2548,13 @@
       if (modulo === 'PATRIMONIO') {
         const q = document.getElementById('buscarPatrimonio').value.toLowerCase();
         const est = document.getElementById('filtroEstadoPatrimonio').value;
+        const areaF = document.getElementById('filtroAreaPatrimonio') ? document.getElementById('filtroAreaPatrimonio').value : '';
         const filtrados = db.patrimonio.filter(p => {
-          const matchQ = String(p[0]).toLowerCase().includes(q) || String(p[1]).toLowerCase().includes(q) || String(p[4]).toLowerCase().includes(q) || String(p[8]).toLowerCase().includes(q);
+          const areaResp = String(p[11] || 'Uso Compartido');
+          const matchQ = String(p[0]).toLowerCase().includes(q) || String(p[1]).toLowerCase().includes(q) || String(p[4]).toLowerCase().includes(q) || String(p[5]).toLowerCase().includes(q) || String(p[8]).toLowerCase().includes(q) || areaResp.toLowerCase().includes(q);
           const matchE = !est || p[6] === est;
-          return matchQ && matchE;
+          const matchA = !areaF || areaResp === areaF;
+          return matchQ && matchE && matchA;
         });
         filas = filtrados.map(p => ({
           'Código Patrimonial': String(p[0]),
@@ -2350,6 +2562,7 @@
           'Marca': p[2],
           'Modelo': p[3],
           'Serie / Placa': p[4],
+          'Área Responsable': p[11] || 'Uso Compartido',
           'Ubicación Física': p[5],
           'Estado de Conservación': p[6],
           'En Uso': p[7],
