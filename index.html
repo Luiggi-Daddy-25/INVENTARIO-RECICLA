@@ -16,38 +16,145 @@
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
     .tab-active { border-bottom: 3px solid #15803d; color: #15803d; font-weight: 700; background-color: #f0fdf4; }
     #reader video { border-radius: 0.5rem; width: 100% !important; height: auto !important; }
+    .login-bg {
+      background-image:
+        linear-gradient(110deg, rgba(255,255,255,0.92) 0%, rgba(240,253,244,0.78) 42%, rgba(255,255,255,0.28) 100%),
+        url('./FOTO-ALMACEN.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    @media (max-width: 1023px) {
+      .login-bg {
+        background-image:
+          linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(240,253,244,0.72) 45%, rgba(20,83,45,0.35) 100%),
+          url('./FOTO-ALMACEN.jpg');
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- PANTALLA DE LOGIN (SIN BOTÓN URL API) -->
-  <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-green-800 to-emerald-950 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 mb-3">
-          <i class="fas fa-recycle text-3xl"></i>
+  <!-- PANTALLA DE LOGIN ECOLÓGICA RESPONSIVA -->
+  <div id="loginScreen" class="fixed inset-0 login-bg z-50 overflow-y-auto flex flex-col justify-between">
+    <!-- Contenido Principal (Logo/Branding + Tarjeta de Acceso) -->
+    <div class="flex-1 flex items-center justify-center px-4 py-6 sm:py-10">
+      <div class="w-full max-w-5xl flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-8 lg:gap-10">
+
+        <!-- Bloque Izquierdo / Superior: Logo y Marca del Programa -->
+        <div class="flex flex-col items-center text-center max-w-md lg:w-1/2">
+          <img src="./LOGO%20PR%20CALLERIA.png" alt="Logo Programa de Segregación de la Fuente" class="w-36 h-36 sm:w-48 sm:h-48 lg:w-56 lg:h-56 object-contain drop-shadow-lg mb-2" onerror="this.style.display='none'">
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0f4c2c] leading-tight tracking-tight uppercase drop-shadow-sm">
+            Programa de Segregación de la Fuente
+          </h1>
+          <div class="flex items-center justify-center gap-3 my-2.5 w-full">
+            <span class="h-[2px] w-10 bg-[#15803d]/60 rounded"></span>
+            <span class="bg-gradient-to-r from-[#0e6b34] to-[#16803c] text-white italic font-bold text-sm sm:text-base px-5 py-1.5 rounded-xl shadow-md">
+              Sistema de Inventarios
+            </span>
+            <span class="h-[2px] w-10 bg-[#15803d]/60 rounded"></span>
+          </div>
+          <p class="text-[#0f4c2c] italic font-semibold text-sm sm:text-base drop-shadow-sm">
+            ¡Por un entorno más limpio y sostenible!
+          </p>
         </div>
-        <h1 class="text-2xl font-bold text-gray-800">PROGRAMA RECICLA</h1>
-        <p class="text-sm text-gray-500">Control Patrimonial SIGA y Almacén - MPCP</p>
-      </div>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Usuario</label>
-          <input type="text" id="loginUser" placeholder="Ingresa tu usuario" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600">
+
+        <!-- Bloque Derecho / Inferior: Tarjeta de Inicio de Sesión -->
+        <div class="w-full max-w-md lg:w-1/2 flex justify-center mt-4 lg:mt-0">
+          <div class="relative bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-[400px] pt-12 pb-6 px-6 sm:px-8 border border-green-100 overflow-visible">
+            <!-- Medallón superior sobresaliente -->
+            <div class="absolute -top-9 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center border border-green-50">
+              <div class="w-14 h-14 rounded-full bg-green-100 border-2 border-[#15803d] flex items-center justify-center text-[#0f4c2c]">
+                <i class="fas fa-cube text-2xl"></i>
+              </div>
+            </div>
+
+            <div class="text-center mb-5">
+              <h2 class="text-2xl font-extrabold text-[#0f4c2c]">Sistema de Inventarios</h2>
+              <div class="flex items-center justify-center gap-2 mt-1">
+                <span class="h-[1.5px] flex-1 bg-green-600/40 max-w-[45px]"></span>
+                <p class="text-xs font-semibold text-gray-600">Programa de Segregación de la Fuente</p>
+                <span class="h-[1.5px] flex-1 bg-green-600/40 max-w-[45px]"></span>
+              </div>
+            </div>
+
+            <div class="space-y-3.5">
+              <!-- Campo Usuario -->
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#0f4c2c]">
+                  <i class="fas fa-user text-base"></i>
+                </span>
+                <input type="text" id="loginUser" placeholder="Ingrese tu usuario" autocomplete="username"
+                  class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 bg-gray-50/70 text-gray-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 transition">
+              </div>
+
+              <!-- Campo Contraseña con botón de mostrar/ocultar -->
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#0f4c2c]">
+                  <i class="fas fa-lock text-base"></i>
+                </span>
+                <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password"
+                  onkeydown="if(event.key==='Enter') iniciarSesion()"
+                  class="w-full pl-11 pr-11 py-3 rounded-xl border border-gray-300 bg-gray-50/70 text-gray-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 transition">
+                <button type="button" onclick="togglePasswordVisibility()" tabindex="-1"
+                  class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-500 hover:text-[#0f4c2c] focus:outline-none" title="Mostrar u ocultar contraseña">
+                  <i id="togglePassIcon" class="fas fa-eye-slash text-base"></i>
+                </button>
+              </div>
+
+              <p id="loginError" class="text-red-600 text-xs sm:text-sm hidden text-center font-semibold bg-red-50 border border-red-200 rounded-lg py-2 px-3"></p>
+
+              <!-- Botón Ingresar -->
+              <button onclick="iniciarSesion()" id="btnLogin"
+                class="w-full bg-gradient-to-r from-[#0e6b34] to-[#15803d] hover:from-[#0a5328] hover:to-[#116932] text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                <i class="fas fa-right-to-bracket"></i> Ingresar al Sistema
+              </button>
+            </div>
+
+            <!-- Divisor con hojita -->
+            <div class="flex items-center justify-center gap-3 my-4">
+              <span class="h-[1px] flex-1 bg-gray-200"></span>
+              <i class="fas fa-leaf text-green-700 text-sm"></i>
+              <span class="h-[1px] flex-1 bg-gray-200"></span>
+            </div>
+
+            <!-- Pie Institucional -->
+            <div class="flex items-center justify-center gap-2 text-xs font-bold text-[#0f4c2c] pb-2">
+              <i class="fas fa-landmark text-green-700 text-base"></i>
+              <span>Municipalidad Provincial de Coronel Portillo</span>
+            </div>
+
+            <!-- Ola verde decorativa en la base de la tarjeta -->
+            <div class="absolute bottom-0 left-0 right-0 h-3 rounded-b-3xl overflow-hidden bg-gradient-to-r from-[#84cc16] via-[#15803d] to-[#0f4c2c]"></div>
+          </div>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Contraseña</label>
-          <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter') iniciarSesion()" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600">
-        </div>
-        <p id="loginError" class="text-red-600 text-sm hidden text-center font-medium"></p>
-        <button onclick="iniciarSesion()" id="btnLogin" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-lg shadow transition">
-          INGRESAR AL SISTEMA
-        </button>
-      </div>
-      <div class="mt-6 text-xs text-gray-400 text-center">
-        Municipalidad Provincial de Coronel Portillo
+
       </div>
     </div>
+
+    <!-- Barra Inferior Ecológica con 3 Pilares -->
+    <footer class="w-full bg-gradient-to-r from-[#0b4f29] via-[#15733a] to-[#0b4f29] text-white py-3.5 px-4 shadow-inner border-t-4 border-[#84cc16]">
+      <div class="max-w-5xl mx-auto grid grid-cols-3 divide-x divide-white/25 text-center">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 px-2">
+          <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <i class="fas fa-box-open text-sm"></i>
+          </div>
+          <span class="text-[11px] sm:text-xs font-semibold leading-tight">Gestiona tus inventarios</span>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 px-2">
+          <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <i class="fas fa-shield-halved text-sm"></i>
+          </div>
+          <span class="text-[11px] sm:text-xs font-semibold leading-tight">Controla tus registros</span>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 px-2">
+          <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <i class="fas fa-chart-line text-sm"></i>
+          </div>
+          <span class="text-[11px] sm:text-xs font-semibold leading-tight">Optimiza tus recursos</span>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <!-- APLICACIÓN PRINCIPAL -->
@@ -936,6 +1043,20 @@
       return data;
     }
 
+    function togglePasswordVisibility() {
+      const inp = document.getElementById('loginPass');
+      const ico = document.getElementById('togglePassIcon');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.classList.remove('fa-eye-slash');
+        ico.classList.add('fa-eye');
+      } else {
+        inp.type = 'password';
+        ico.classList.remove('fa-eye');
+        ico.classList.add('fa-eye-slash');
+      }
+    }
+
     async function iniciarSesion() {
       const u = document.getElementById('loginUser').value.trim();
       const p = document.getElementById('loginPass').value.trim();
@@ -943,12 +1064,12 @@
       const err = document.getElementById('loginError');
       if (!u || !p) return;
 
-      btn.innerText = 'VERIFICANDO...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
       err.classList.add('hidden');
 
       try {
         const res = await llamarAPI({ action: 'login', username: u, password: p });
-        btn.innerText = 'INGRESAR AL SISTEMA';
+        btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Ingresar al Sistema';
         if (res.success) {
           currentUser = res.user;
           sessionToken = res.token;
@@ -982,7 +1103,7 @@
           err.classList.remove('hidden');
         }
       } catch (e) {
-        btn.innerText = 'INGRESAR AL SISTEMA';
+        btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Ingresar al Sistema';
         err.innerText = 'No se pudo conectar (' + e.message + '). Asegúrate de haber publicado la versión nueva en Código.gs.';
         err.classList.remove('hidden');
       }
