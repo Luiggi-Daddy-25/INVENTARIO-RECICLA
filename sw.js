@@ -1,8 +1,10 @@
-const CACHE_NAME = 'recicla-inv-pwa-v1';
+const CACHE_NAME = 'recicla-inv-pwa-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './FOTO-ALMACEN.jpg',
+  './LOGO%20PR%20CALLERIA.png'
 ];
 
 self.addEventListener('install', event => {
