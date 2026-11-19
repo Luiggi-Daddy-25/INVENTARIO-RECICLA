@@ -10,6 +10,7 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
@@ -90,40 +91,116 @@
     <!-- CONTENIDO -->
     <main class="p-4 max-w-7xl w-full mx-auto flex-1 space-y-6">
 
-      <!-- 1. DASHBOARD -->
-      <section id="sec-dashboard" class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-600">
-            <div class="text-xs text-gray-500 uppercase font-bold">Total Bienes SIGA</div>
-            <div id="kpi-total-patrimonio" class="text-3xl font-extrabold text-gray-800 mt-1">0</div>
-            <div class="text-xs text-gray-400 mt-1">Uso compartido entre áreas</div>
+      <!-- 1. DASHBOARD GERENCIAL Y OPERATIVO -->
+      <section id="sec-dashboard" class="space-y-5">
+        <!-- Barra de Accesos Rápidos y Reporte Gerencial -->
+        <div class="bg-white p-4 rounded-xl shadow flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="font-extrabold text-gray-800 text-base flex items-center gap-2">
+              <i class="fas fa-gauge-high text-green-700"></i> Panel de Control Operativo
+            </h2>
+            <p id="dashUltimaSync" class="text-xs text-gray-400">Sincronizado en tiempo real con Google Sheets</p>
           </div>
-          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-amber-500">
-            <div class="text-xs text-gray-500 uppercase font-bold">Bienes Estado Regular/Malo</div>
-            <div id="kpi-alerta-patrimonio" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
-            <div class="text-xs text-gray-400 mt-1">Requieren mantenimiento</div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-600">
-            <div class="text-xs text-gray-500 uppercase font-bold">Ítems en Almacén</div>
-            <div id="kpi-total-materiales" class="text-3xl font-extrabold text-gray-800 mt-1">0</div>
-            <div class="text-xs text-gray-400 mt-1">Herramientas y consumibles</div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-600">
-            <div class="text-xs text-gray-500 uppercase font-bold">Alerta Stock Bajo</div>
-            <div id="kpi-alerta-stock" class="text-3xl font-extrabold text-red-600 mt-1">0</div>
-            <div class="text-xs text-gray-400 mt-1">Materiales por agotar</div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="cambiarTab('movimientos')" class="bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-1.5">
+              <i class="fas fa-exchange-alt"></i> Registrar Movimiento
+            </button>
+            <button onclick="exportarReporteGeneralExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-1.5" title="Descarga un solo archivo Excel con 3 pestañas: Patrimonio, Materiales y Kardex">
+              <i class="fas fa-file-excel"></i> Reporte General Excel (3 Hojas)
+            </button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 6 KPIs Principales -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-600">
+            <div class="text-[11px] text-gray-500 uppercase font-bold">Total Bienes SIGA</div>
+            <div id="kpi-total-patrimonio" class="text-3xl font-extrabold text-gray-800 mt-1">0</div>
+            <div class="text-[11px] text-gray-400 mt-1">Catálogo activo</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-amber-500">
+            <div class="text-[11px] text-gray-500 uppercase font-bold">Regular / Malo</div>
+            <div id="kpi-alerta-patrimonio" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
+            <div class="text-[11px] text-gray-400 mt-1">Requieren atención</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-indigo-600">
+            <div class="text-[11px] text-gray-500 uppercase font-bold">En Campo / Ruta</div>
+            <div id="kpi-en-campo" class="text-3xl font-extrabold text-indigo-700 mt-1">0</div>
+            <div class="text-[11px] text-gray-400 mt-1">Fuera de sede</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-600">
+            <div class="text-[11px] text-gray-500 uppercase font-bold">Ítems Almacén</div>
+            <div id="kpi-total-materiales" class="text-3xl font-extrabold text-gray-800 mt-1">0</div>
+            <div class="text-[11px] text-gray-400 mt-1">Herram. y consumibles</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-600">
+            <div class="text-[11px] text-gray-500 uppercase font-bold">Stock Crítico</div>
+            <div id="kpi-alerta-stock" class="text-3xl font-extrabold text-red-600 mt-1">0</div>
+            <div class="text-[11px] text-gray-400 mt-1">Por reponer</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow border-l-4 border-teal-600">
+            <div class="text-[11px] text-gray-500 uppercase font-bold">Movimientos Hoy</div>
+            <div id="kpi-movs-hoy" class="text-3xl font-extrabold text-teal-700 mt-1">0</div>
+            <div id="kpi-movs-mes" class="text-[11px] text-gray-400 mt-1">Este mes: 0</div>
+          </div>
+        </div>
+
+        <!-- 3 Gráficos Interactivos (Chart.js) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="bg-white rounded-xl shadow p-4 flex flex-col">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3"><i class="fas fa-chart-pie text-blue-600 mr-2"></i>Estado de Bienes SIGA</h3>
+            <div class="relative flex-1 min-h-[210px] flex items-center justify-center">
+              <canvas id="chartEstadoBienes"></canvas>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-4 flex flex-col">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3"><i class="fas fa-chart-column text-green-600 mr-2"></i>Movimientos por Área</h3>
+            <div class="relative flex-1 min-h-[210px] flex items-center justify-center">
+              <canvas id="chartMovsArea"></canvas>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-4 flex flex-col">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3"><i class="fas fa-building text-purple-600 mr-2"></i>Distribución por Sede</h3>
+            <div class="relative flex-1 min-h-[210px] flex items-center justify-center">
+              <canvas id="chartSedes"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control Operativo en Tiempo Real + Top Consumibles -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div class="bg-white rounded-xl shadow p-4">
-            <h3 class="font-bold text-gray-700 border-b pb-2 mb-3"><i class="fas fa-triangle-exclamation text-red-500 mr-2"></i>Materiales con Stock Crítico</h3>
-            <div id="listaAlertasStock" class="space-y-2 text-sm"></div>
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3 flex justify-between items-center">
+              <span><i class="fas fa-route text-indigo-600 mr-2"></i>Bienes Actualmente en Campo / Ruta</span>
+              <span id="badgeEnCampoCount" class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-bold">0</span>
+            </h3>
+            <div id="listaBienesEnCampo" class="space-y-2 text-sm max-h-64 overflow-y-auto"></div>
           </div>
           <div class="bg-white rounded-xl shadow p-4">
-            <h3 class="font-bold text-gray-700 border-b pb-2 mb-3"><i class="fas fa-screwdriver-wrench text-amber-500 mr-2"></i>Bienes Patrimoniales Observados (Regular / Malo)</h3>
-            <div id="listaAlertasPatrimonio" class="space-y-2 text-sm max-h-64 overflow-y-auto"></div>
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3"><i class="fas fa-fire text-orange-500 mr-2"></i>Top 5 Materiales Más Consumidos (Salidas)</h3>
+            <div id="listaTopConsumibles" class="space-y-3 text-sm"></div>
           </div>
+        </div>
+
+        <!-- Alertas de Stock y Mantenimiento -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3"><i class="fas fa-triangle-exclamation text-red-500 mr-2"></i>Materiales con Stock Crítico</h3>
+            <div id="listaAlertasStock" class="space-y-2 text-sm max-h-60 overflow-y-auto"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-2 mb-3"><i class="fas fa-screwdriver-wrench text-amber-500 mr-2"></i>Bienes Patrimoniales Observados (Regular / Malo)</h3>
+            <div id="listaAlertasPatrimonio" class="space-y-2 text-sm max-h-60 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- Feed de Actividad en Vivo (Últimos 5 Movimientos) -->
+        <div class="bg-white rounded-xl shadow p-4">
+          <div class="flex justify-between items-center border-b pb-2 mb-3">
+            <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-bolt text-amber-500 mr-2"></i>Actividad Reciente (Últimos 5 Movimientos)</h3>
+            <button onclick="cambiarTab('historial')" class="text-xs font-bold text-green-700 hover:underline">Ver Kardex completo &rarr;</button>
+          </div>
+          <div id="feedUltimosMovimientos" class="divide-y text-xs"></div>
         </div>
       </section>
 
@@ -949,34 +1026,137 @@
       if (animar) document.getElementById('iconSync').classList.remove('fa-spin');
     }
 
+    let chartEstadoObj = null;
+    let chartAreaObj = null;
+    let chartSedesObj = null;
+
+    function parsearFechaMovimiento(str) {
+      if (!str) return null;
+      const s = String(str).trim();
+      // Formato DD/MM/YYYY o D/M/YYYY (Perú / Español)
+      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (m) {
+        const p1 = parseInt(m[1], 10);
+        const p2 = parseInt(m[2], 10);
+        const yr = parseInt(m[3], 10);
+        // Si p2 > 12, es formato MM/DD/YYYY
+        const day = p2 > 12 ? p2 : p1;
+        const month = p2 > 12 ? p1 - 1 : p2 - 1;
+        return new Date(yr, month, day);
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
     function renderizarDashboard() {
+      const syncEl = document.getElementById('dashUltimaSync');
+      if (syncEl) syncEl.innerText = 'Última actualización: ' + new Date().toLocaleTimeString();
+
+      // 1. KPIs Principales
       document.getElementById('kpi-total-patrimonio').innerText = db.patrimonio.length;
       const observados = db.patrimonio.filter(p => p[6] === 'Regular' || p[6] === 'Malo');
       document.getElementById('kpi-alerta-patrimonio').innerText = observados.length;
+
+      const enCampo = db.patrimonio.filter(p => /ruta|campo/i.test(String(p[5] || '')));
+      document.getElementById('kpi-en-campo').innerText = enCampo.length;
+      document.getElementById('badgeEnCampoCount').innerText = enCampo.length;
 
       document.getElementById('kpi-total-materiales').innerText = db.materiales.length;
       const stockBajo = db.materiales.filter(m => Number(m[4]) <= Number(m[5]));
       document.getElementById('kpi-alerta-stock').innerText = stockBajo.length;
 
+      // Movimientos de Hoy y del Mes
+      const ahora = new Date();
+      let movsHoy = 0, movsMes = 0;
+      db.movimientos.forEach(m => {
+        const f = parsearFechaMovimiento(m[1]);
+        if (f && f.getFullYear() === ahora.getFullYear() && f.getMonth() === ahora.getMonth()) {
+          movsMes++;
+          if (f.getDate() === ahora.getDate()) movsHoy++;
+        }
+      });
+      document.getElementById('kpi-movs-hoy').innerText = movsHoy;
+      document.getElementById('kpi-movs-mes').innerText = 'Este mes: ' + movsMes;
+
+      // 2. Panel: Bienes Actualmente en Campo / Ruta
+      const contCampo = document.getElementById('listaBienesEnCampo');
+      if (enCampo.length === 0) {
+        contCampo.innerHTML = '<p class="text-green-600 font-medium text-xs py-2"><i class="fas fa-check-circle mr-1"></i>Todos los bienes patrimoniales se encuentran resguardados en sede.</p>';
+      } else {
+        contCampo.innerHTML = '';
+        enCampo.forEach(p => {
+          const descSafe = String(p[1]).replace(/'/g, "\\'");
+          const ultMov = db.movimientos.find(m => String(m[4]) === String(p[0]));
+          const fechaSalida = ultMov ? ultMov[1] : 'Sin fecha registrada';
+          const areaSalida = ultMov && ultMov[6] ? ultMov[6] : 'Campo';
+          contCampo.innerHTML += `
+            <div class="flex justify-between items-center gap-2 bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-200">
+              <div class="min-w-0">
+                <span onclick="verHistorialItem('${p[0]}', '${descSafe}', 'PATRIMONIO')" class="font-bold text-indigo-900 hover:underline cursor-pointer block truncate">[${p[0]}] ${p[1]}</span>
+                <span class="text-xs text-gray-600 block"><b>A cargo:</b> ${p[8]} | <b>Área:</b> ${areaSalida}</span>
+                <span class="text-[11px] text-gray-400 block"><i class="far fa-clock mr-1"></i>Desde: ${fechaSalida}</span>
+              </div>
+              <button onclick="seleccionarBienParaMovimiento('${p[0]}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shadow">
+                <i class="fas fa-rotate-left mr-1"></i>Retorno
+              </button>
+            </div>`;
+        });
+      }
+
+      // 3. Top 5 Materiales Más Consumidos (Salidas a Operación)
+      const consumoMap = {};
+      db.movimientos.forEach(m => {
+        if (String(m[2]).toUpperCase() === 'MATERIAL' && String(m[3]).toUpperCase().includes('SALIDA')) {
+          const cod = String(m[4]);
+          if (!consumoMap[cod]) consumoMap[cod] = { codigo: cod, desc: m[5], total: 0 };
+          consumoMap[cod].total += Number(m[9]) || 0;
+        }
+      });
+      const topConsumibles = Object.values(consumoMap).sort((a, b) => b.total - a.total).slice(0, 5);
+      const contTop = document.getElementById('listaTopConsumibles');
+      if (topConsumibles.length === 0) {
+        contTop.innerHTML = '<p class="text-gray-400 text-xs py-2">Aún no se registran salidas de materiales para calcular el ranking.</p>';
+      } else {
+        const maxVal = topConsumibles[0].total || 1;
+        contTop.innerHTML = '';
+        topConsumibles.forEach((item, idx) => {
+          const matInfo = db.materiales.find(x => String(x[0]) === item.codigo);
+          const unidad = matInfo ? matInfo[3] : 'Und.';
+          const pct = Math.max(8, Math.round((item.total / maxVal) * 100));
+          const descSafe = String(item.desc).replace(/'/g, "\\'");
+          contTop.innerHTML += `
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span onclick="verHistorialItem('${item.codigo}', '${descSafe}', 'MATERIAL')" class="font-bold text-gray-700 hover:text-green-700 cursor-pointer truncate pr-2">${idx + 1}. ${item.desc}</span>
+                <span class="font-extrabold text-orange-600 whitespace-nowrap">${item.total} ${unidad}</span>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-gradient-to-r from-orange-400 to-orange-600 h-2.5 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>`;
+        });
+      }
+
+      // 4. Alertas Stock Crítico y Bienes Observados
       const contStock = document.getElementById('listaAlertasStock');
-      contStock.innerHTML = stockBajo.length ? '' : '<p class="text-green-600 font-medium">Todo el almacén cuenta con stock óptimo.</p>';
+      contStock.innerHTML = stockBajo.length ? '' : '<p class="text-green-600 font-medium text-xs">Todo el almacén cuenta con stock óptimo.</p>';
       stockBajo.forEach(m => {
-        const descSafe = String(m[1]).replace(/'/g, "\'");
+        const descSafe = String(m[1]).replace(/'/g, "\\'");
         contStock.innerHTML += `
           <div class="flex justify-between items-center bg-red-50 p-2.5 rounded-lg border border-red-200">
             <div>
               <span onclick="verHistorialItem('${m[0]}', '${descSafe}', 'MATERIAL')" class="font-bold text-gray-800 hover:text-blue-600 cursor-pointer underline">${m[1]}</span>
               <span class="text-xs text-gray-500 block">Categoría: ${m[2]} | Mínimo: ${m[5]} ${m[3]}</span>
             </div>
-            <span class="bg-red-600 text-white px-2.5 py-1 rounded font-bold text-xs">Quedan: ${m[4]} ${m[3]}</span>
+            <span class="bg-red-600 text-white px-2.5 py-1 rounded font-bold text-xs whitespace-nowrap">Quedan: ${m[4]} ${m[3]}</span>
           </div>`;
       });
 
       const contPat = document.getElementById('listaAlertasPatrimonio');
-      contPat.innerHTML = observados.length ? '' : '<p class="text-green-600 font-medium">Todos los bienes en estado Bueno.</p>';
+      contPat.innerHTML = observados.length ? '' : '<p class="text-green-600 font-medium text-xs">Todos los bienes en estado Bueno.</p>';
       observados.forEach(p => {
         const badgeColor = p[6] === 'Malo' ? 'bg-red-600 text-white' : 'bg-amber-500 text-white';
-        const descSafe = String(p[1]).replace(/'/g, "\'");
+        const descSafe = String(p[1]).replace(/'/g, "\\'");
         contPat.innerHTML += `
           <div class="flex justify-between items-center bg-amber-50/60 p-2.5 rounded-lg border border-amber-200">
             <div>
@@ -986,6 +1166,212 @@
             <span class="${badgeColor} px-2.5 py-1 rounded font-bold text-xs">${p[6]}</span>
           </div>`;
       });
+
+      // 5. Feed Últimos 5 Movimientos
+      const contFeed = document.getElementById('feedUltimosMovimientos');
+      const ult5 = db.movimientos.slice(0, 5);
+      if (ult5.length === 0) {
+        contFeed.innerHTML = '<p class="text-gray-400 py-3 text-center">No hay movimientos registrados todavía.</p>';
+      } else {
+        contFeed.innerHTML = '';
+        ult5.forEach(m => {
+          const esPat = String(m[2]).toUpperCase() === 'PATRIMONIO';
+          const badge = esPat ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+          const detalleCant = esPat ? `Estado: ${m[10]}` : `Cant: ${m[9]} (${m[10]})`;
+          contFeed.innerHTML += `
+            <div class="py-2.5 flex flex-wrap justify-between items-center gap-2 hover:bg-gray-50 px-1 rounded">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="px-2 py-0.5 rounded font-bold text-[10px] ${badge}">${m[2]}</span>
+                <div class="min-w-0">
+                  <span class="font-bold text-gray-800">${m[3]}</span> — <span class="font-semibold text-gray-700">${m[5]}</span>
+                  <span class="text-gray-500 block text-[11px]">Área: <b>${m[6] || '-'}</b> | Supervisor: ${m[7] || '-'} | Personal: ${m[8] || '-'}</span>
+                </div>
+              </div>
+              <div class="text-right whitespace-nowrap">
+                <span class="font-bold text-gray-700 block">${detalleCant}</span>
+                <span class="text-[11px] text-gray-400">${m[1]}</span>
+              </div>
+            </div>`;
+        });
+      }
+
+      // 6. Renderizar Gráficos Chart.js
+      renderizarGraficosDashboard();
+    }
+
+    function renderizarGraficosDashboard() {
+      if (typeof Chart === 'undefined') return;
+
+      // Gráfico 1: Dona Estado de Bienes SIGA
+      const cBueno = db.patrimonio.filter(p => p[6] === 'Bueno').length;
+      const cReg = db.patrimonio.filter(p => p[6] === 'Regular').length;
+      const cMalo = db.patrimonio.filter(p => p[6] === 'Malo').length;
+
+      if (chartEstadoObj) chartEstadoObj.destroy();
+      const ctx1 = document.getElementById('chartEstadoBienes');
+      if (ctx1) {
+        chartEstadoObj = new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: ['Bueno', 'Regular', 'Malo'],
+            datasets: [{
+              data: [cBueno, cReg, cMalo],
+              backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            }
+          }
+        });
+      }
+
+      // Gráfico 2: Barras Movimientos por Área Operativa
+      const areasLabels = ['Inorgánicos', 'Orgánicos', 'Puntos Críticos', 'Almacén / Admin'];
+      const areasCounts = [0, 0, 0, 0];
+      db.movimientos.forEach(m => {
+        const a = String(m[6] || '').toLowerCase();
+        if (a.includes('inorg')) areasCounts[0]++;
+        else if (a.includes('org')) areasCounts[1]++;
+        else if (a.includes('crít') || a.includes('crit')) areasCounts[2]++;
+        else areasCounts[3]++;
+      });
+
+      if (chartAreaObj) chartAreaObj.destroy();
+      const ctx2 = document.getElementById('chartMovsArea');
+      if (ctx2) {
+        chartAreaObj = new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: areasLabels,
+            datasets: [{
+              label: 'Movimientos',
+              data: areasCounts,
+              backgroundColor: ['#2563eb', '#16a34a', '#ea580c', '#64748b'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { size: 10 } } },
+              x: { ticks: { font: { size: 10 } } }
+            }
+          }
+        });
+      }
+
+      // Gráfico 3: Barras Horizontales Distribución por Sede
+      let patMaest = 0, patPlanta = 0, patCampo = 0;
+      db.patrimonio.forEach(p => {
+        const u = String(p[5] || '').toLowerCase();
+        if (u.includes('planta')) patPlanta++;
+        else if (u.includes('ruta') || u.includes('campo')) patCampo++;
+        else patMaest++;
+      });
+      let matMaest = 0, matPlanta = 0;
+      db.materiales.forEach(m => {
+        const u = String(m[6] || '').toLowerCase();
+        if (u.includes('planta')) matPlanta++;
+        else matMaest++;
+      });
+
+      if (chartSedesObj) chartSedesObj.destroy();
+      const ctx3 = document.getElementById('chartSedes');
+      if (ctx3) {
+        chartSedesObj = new Chart(ctx3, {
+          type: 'bar',
+          data: {
+            labels: ['Maestranza', 'Planta Valoriz.', 'En Ruta/Campo'],
+            datasets: [
+              { label: 'Bienes SIGA', data: [patMaest, patPlanta, patCampo], backgroundColor: '#1d4ed8', borderRadius: 4 },
+              { label: 'Ítems Almacén', data: [matMaest, matPlanta, 0], backgroundColor: '#15803d', borderRadius: 4 }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            scales: {
+              x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { size: 10 } } },
+              y: { ticks: { font: { size: 10 } } }
+            }
+          }
+        });
+      }
+    }
+
+    function exportarReporteGeneralExcel() {
+      if (typeof XLSX === 'undefined') {
+        return alert('La librería de Excel aún está cargando. Intenta nuevamente en unos segundos.');
+      }
+      const fecha = new Date().toISOString().slice(0, 10);
+      const wb = XLSX.utils.book_new();
+
+      function agregarHoja(datos, nombre) {
+        const ws = XLSX.utils.json_to_sheet(datos.length ? datos : [{ Info: 'Sin registros' }]);
+        const headers = Object.keys(datos.length ? datos[0] : { Info: '' });
+        ws['!cols'] = headers.map(h => {
+          const maxLen = Math.max(h.length, ...datos.map(r => String(r[h] || '').length));
+          return { wch: Math.min(Math.max(maxLen + 3, 12), 45) };
+        });
+        XLSX.utils.book_append_sheet(wb, ws, nombre);
+      }
+
+      const patRows = db.patrimonio.map(p => ({
+        'Código Patrimonial': String(p[0]),
+        'Descripción': p[1],
+        'Marca': p[2],
+        'Modelo': p[3],
+        'Serie / Placa': p[4],
+        'Ubicación Física': p[5],
+        'Estado': p[6],
+        'En Uso': p[7],
+        'Último Responsable': p[8],
+        'Observaciones': p[9] || ''
+      }));
+
+      const matRows = db.materiales.map(m => ({
+        'SKU': m[0],
+        'Material / Insumo': m[1],
+        'Categoría': m[2],
+        'Unidad': m[3],
+        'Stock Actual': Number(m[4]),
+        'Stock Mínimo': Number(m[5]),
+        'Ubicación Almacén': m[6],
+        'Estatus': Number(m[4]) <= Number(m[5]) ? 'STOCK BAJO' : 'ÓPTIMO'
+      }));
+
+      const kardexRows = db.movimientos.map(m => ({
+        'ID': m[0],
+        'Fecha y Hora': m[1],
+        'Tipo': m[2],
+        'Acción': m[3],
+        'Código': String(m[4]),
+        'Descripción': m[5],
+        'Área de Uso': m[6],
+        'Supervisor a Cargo': m[7],
+        'Personal que Usó': m[8],
+        'Cantidad': m[9],
+        'Estado / Stock': m[10],
+        'Usuario Sistema': m[11],
+        'Observaciones': m[12] || ''
+      }));
+
+      agregarHoja(patRows, 'Bienes Patrimoniales');
+      agregarHoja(matRows, 'Almacén Materiales');
+      agregarHoja(kardexRows, 'Kardex General');
+
+      XLSX.writeFile(wb, `Reporte_General_RECICLA_${fecha}.xlsx`);
     }
 
     function renderizarPatrimonio() {
