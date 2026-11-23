@@ -1,8 +1,9 @@
-const CACHE_NAME = 'recicla-inv-pwa-v2';
+const CACHE_NAME = 'recicla-inv-pwa-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './inventario-LOGO.png',
   './FOTO-ALMACEN.jpg',
   './LOGO%20PR%20CALLERIA.png'
 ];
