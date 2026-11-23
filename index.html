@@ -467,7 +467,7 @@
             <label class="block text-xs font-bold text-gray-600 mb-1">Observación / Actividad o Punto Crítico</label>
             <input type="text" id="movMatObs" placeholder="Ej: Limpieza Punto Crítico Av. Sáenz Peña" class="w-full border rounded-lg p-2.5 text-sm">
           </div>
-          <button onclick="guardarMovimientoMaterial()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2.5 rounded-lg shadow">
+          <button id="btnMovMaterial" onclick="guardarMovimientoMaterial()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2.5 rounded-lg shadow transition">
             GUARDAR MOVIMIENTO DE MATERIAL
           </button>
         </div>
@@ -537,7 +537,7 @@
             <label class="block text-xs font-bold text-gray-600 mb-1">Observaciones</label>
             <input type="text" id="movPatObs" placeholder="Ej: Asignado a Microruta RI-08 sin novedades" class="w-full border rounded-lg p-2.5 text-sm">
           </div>
-          <button onclick="guardarMovimientoPatrimonio()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg shadow">
+          <button id="btnMovPatrimonio" onclick="guardarMovimientoPatrimonio()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg shadow transition">
             GUARDAR USO / ESTADO DEL BIEN
           </button>
         </div>
@@ -596,7 +596,7 @@
             <option value="Puntos Críticos">Puntos Críticos</option>
             <option value="Coordinación General">Coordinación General</option>
           </select>
-          <button onclick="guardarNuevoUsuario()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded-lg text-sm">Crear Usuario</button>
+          <button id="btnCrearUsuario" onclick="guardarNuevoUsuario()" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded-lg text-sm transition">Crear Usuario</button>
         </div>
 
         <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-x-auto">
@@ -700,7 +700,7 @@
         </div>
         <div class="flex gap-1.5">
           <input type="text" id="inputUrlFoto" placeholder="O pega aquí el enlace directo de una imagen (https://...)" class="border rounded-lg px-2.5 py-1.5 text-xs flex-1">
-          <button onclick="guardarUrlFotoManual()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Usar URL</button>
+          <button id="btnUrlFoto" onclick="guardarUrlFotoManual()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Usar URL</button>
         </div>
       </div>
 
@@ -778,7 +778,7 @@
       <input type="text" id="elimMotivo" placeholder="Motivo de retiro / baja..." class="w-full border rounded-lg p-2.5 text-sm">
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="cerrarModalEliminar()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
-        <button onclick="ejecutarEliminacionMaster()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold">Sí, Quitar</button>
+        <button id="btnConfirmarEliminar" onclick="ejecutarEliminacionMaster()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition">Sí, Quitar</button>
       </div>
     </div>
   </div>
@@ -849,7 +849,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalEditarPatrimonio').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
-        <button onclick="guardarEdicionPatrimonio()" class="px-4 py-2 bg-amber-600 text-white rounded text-sm font-bold">Guardar Cambios</button>
+        <button id="btnGuardarEditPat" onclick="guardarEdicionPatrimonio()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-bold transition">Guardar Cambios</button>
       </div>
     </div>
   </div>
@@ -913,7 +913,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalEditarMaterial').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
-        <button onclick="guardarEdicionMaterial()" class="px-4 py-2 bg-amber-600 text-white rounded text-sm font-bold">Guardar Cambios</button>
+        <button id="btnGuardarEditMat" onclick="guardarEdicionMaterial()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-bold transition">Guardar Cambios</button>
       </div>
     </div>
   </div>
@@ -935,7 +935,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalEditarUsuario').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
-        <button onclick="guardarEdicionUsuario()" class="px-4 py-2 bg-blue-700 text-white rounded text-sm font-bold">Actualizar</button>
+        <button id="btnGuardarEditUser" onclick="guardarEdicionUsuario()" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded text-sm font-bold transition">Actualizar</button>
       </div>
     </div>
   </div>
@@ -1004,7 +1004,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalNuevoPatrimonio').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
-        <button onclick="crearBienPatrimonial()" class="px-4 py-2 bg-green-700 text-white rounded text-sm font-bold">Guardar Bien</button>
+        <button id="btnCrearPat" onclick="crearBienPatrimonial()" class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded text-sm font-bold transition">Guardar Bien</button>
       </div>
     </div>
   </div>
@@ -1095,7 +1095,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('modalNuevoMaterial').classList.add('hidden')" class="px-4 py-2 border rounded text-sm">Cancelar</button>
-        <button onclick="crearMaterialSKU()" class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded text-sm font-bold shadow">Guardar Material</button>
+        <button id="btnCrearMat" onclick="crearMaterialSKU()" class="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded text-sm font-bold shadow transition">Guardar Material</button>
       </div>
     </div>
   </div>
@@ -1109,10 +1109,40 @@
     let db = { patrimonio: [], materiales: [], movimientos: [], usuarios: [] };
     let html5QrCode = null;
     let itemEscaneadoActual = null;
+    let operacionEnCurso = false;
+
+    // Bloqueo global anti-doble-clic para TODAS las acciones de escritura del sistema
+    async function ejecutarConBloqueo(btnOrId, textoCargando, fnAsync) {
+      if (operacionEnCurso) return;
+      const btn = (typeof btnOrId === 'string') ? document.getElementById(btnOrId) : btnOrId;
+      operacionEnCurso = true;
+      let htmlOriginal = '';
+      if (btn) {
+        htmlOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> ${textoCargando}`;
+      }
+      try {
+        await fnAsync();
+      } catch (err) {
+        alert('Error de conexión al procesar la operación. Verifica tu internet e intenta nuevamente.');
+      } finally {
+        operacionEnCurso = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-60', 'cursor-not-allowed');
+          btn.innerHTML = htmlOriginal;
+        }
+      }
+    }
 
     async function llamarAPI(payload) {
       if (payload.action !== 'login' && sessionToken) {
         payload.token = sessionToken;
+      }
+      if (!payload.reqId) {
+        payload.reqId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
       }
 
       let data = null;
@@ -1171,18 +1201,21 @@
     }
 
     async function iniciarSesion() {
+      if (operacionEnCurso) return;
       const u = document.getElementById('loginUser').value.trim();
       const p = document.getElementById('loginPass').value.trim();
       const btn = document.getElementById('btnLogin');
       const err = document.getElementById('loginError');
       if (!u || !p) return;
 
+      operacionEnCurso = true;
+      btn.disabled = true;
+      btn.classList.add('opacity-60', 'cursor-not-allowed');
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
       err.classList.add('hidden');
 
       try {
         const res = await llamarAPI({ action: 'login', username: u, password: p });
-        btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Ingresar al Sistema';
         if (res.success) {
           currentUser = res.user;
           sessionToken = res.token;
@@ -1216,9 +1249,13 @@
           err.classList.remove('hidden');
         }
       } catch (e) {
-        btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Ingresar al Sistema';
         err.innerText = 'No se pudo conectar (' + e.message + '). Asegúrate de haber publicado la versión nueva en Código.gs.';
         err.classList.remove('hidden');
+      } finally {
+        operacionEnCurso = false;
+        btn.disabled = false;
+        btn.classList.remove('opacity-60', 'cursor-not-allowed');
+        btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Ingresar al Sistema';
       }
     }
 
@@ -1890,15 +1927,17 @@
     }
 
     async function ejecutarEliminacionMaster() {
-      const codigo = document.getElementById('elimCodigo').value;
-      const tipo = document.getElementById('elimTipo').value;
-      const motivo = document.getElementById('elimMotivo').value.trim() || 'Retirado por Master';
-      const payload = tipo === 'PATRIMONIO'
-        ? { action: 'eliminarPatrimonio', codigo, motivo, usuarioAct: currentUser.username }
-        : { action: 'eliminarMaterial', sku: codigo, motivo, usuarioAct: currentUser.username };
-      const res = await llamarAPI(payload);
-      alert(res.message);
-      if (res.success) { cerrarModalEliminar(); cargarDatos(); }
+      await ejecutarConBloqueo('btnConfirmarEliminar', 'Quitando...', async () => {
+        const codigo = document.getElementById('elimCodigo').value;
+        const tipo = document.getElementById('elimTipo').value;
+        const motivo = document.getElementById('elimMotivo').value.trim() || 'Retirado por Master';
+        const payload = tipo === 'PATRIMONIO'
+          ? { action: 'eliminarPatrimonio', codigo, motivo, usuarioAct: currentUser.username }
+          : { action: 'eliminarMaterial', sku: codigo, motivo, usuarioAct: currentUser.username };
+        const res = await llamarAPI(payload);
+        if (res.success) { cerrarModalEliminar(); await cargarDatos(); }
+        alert(res.message);
+      });
     }
 
     // AMBIENTES / ALMACENES INTERNOS PARA BIENES PATRIMONIALES
@@ -1994,23 +2033,25 @@
     }
 
     async function guardarEdicionPatrimonio() {
-      const item = {
-        codigoOriginal: document.getElementById('epCodigoOriginal').value.trim(),
-        descripcionOriginal: document.getElementById('epDescOriginal').value.trim(),
-        codigoNuevo: document.getElementById('epCodigoNuevo').value.trim(),
-        descripcion: document.getElementById('epDesc').value.trim(),
-        marca: document.getElementById('epMarca').value.trim(),
-        modelo: document.getElementById('epModelo').value.trim(),
-        serie: document.getElementById('epSerie').value.trim(),
-        ubicacion: obtenerUbicacionPatrimonioCompleta('ep'),
-        estado: document.getElementById('epEstado').value,
-        areaResponsable: document.getElementById('epAreaResp').value,
-        responsable: document.getElementById('epResp').value.trim(),
-        observaciones: document.getElementById('epObs').value.trim()
-      };
-      const res = await llamarAPI({ action: 'editarPatrimonio', item, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('modalEditarPatrimonio').classList.add('hidden'); cargarDatos(); }
+      await ejecutarConBloqueo('btnGuardarEditPat', 'Guardando...', async () => {
+        const item = {
+          codigoOriginal: document.getElementById('epCodigoOriginal').value.trim(),
+          descripcionOriginal: document.getElementById('epDescOriginal').value.trim(),
+          codigoNuevo: document.getElementById('epCodigoNuevo').value.trim(),
+          descripcion: document.getElementById('epDesc').value.trim(),
+          marca: document.getElementById('epMarca').value.trim(),
+          modelo: document.getElementById('epModelo').value.trim(),
+          serie: document.getElementById('epSerie').value.trim(),
+          ubicacion: obtenerUbicacionPatrimonioCompleta('ep'),
+          estado: document.getElementById('epEstado').value,
+          areaResponsable: document.getElementById('epAreaResp').value,
+          responsable: document.getElementById('epResp').value.trim(),
+          observaciones: document.getElementById('epObs').value.trim()
+        };
+        const res = await llamarAPI({ action: 'editarPatrimonio', item, usuarioAct: currentUser.username });
+        if (res.success) { document.getElementById('modalEditarPatrimonio').classList.add('hidden'); await cargarDatos(); }
+        alert(res.message);
+      });
     }
 
     // SUB-ALMACENES POR SEDE Y GENERADOR AUTOMÁTICO DE SKU
@@ -2143,20 +2184,22 @@
     }
 
     async function guardarEdicionMaterial() {
-      const mat = {
-        codigoOriginal: document.getElementById('emCodigoOriginal').value.trim(),
-        descripcionOriginal: document.getElementById('emDescOriginal').value.trim(),
-        codigoNuevo: document.getElementById('emCodigoNuevo').value.trim(),
-        descripcion: document.getElementById('emDesc').value.trim(),
-        categoria: document.getElementById('emCat').value,
-        unidad: document.getElementById('emUnidad').value,
-        stockActual: document.getElementById('emStockActual').value,
-        stockMinimo: document.getElementById('emStockMin').value,
-        ubicacion: obtenerUbicacionCompleta('em')
-      };
-      const res = await llamarAPI({ action: 'editarMaterial', mat, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('modalEditarMaterial').classList.add('hidden'); cargarDatos(); }
+      await ejecutarConBloqueo('btnGuardarEditMat', 'Guardando...', async () => {
+        const mat = {
+          codigoOriginal: document.getElementById('emCodigoOriginal').value.trim(),
+          descripcionOriginal: document.getElementById('emDescOriginal').value.trim(),
+          codigoNuevo: document.getElementById('emCodigoNuevo').value.trim(),
+          descripcion: document.getElementById('emDesc').value.trim(),
+          categoria: document.getElementById('emCat').value,
+          unidad: document.getElementById('emUnidad').value,
+          stockActual: document.getElementById('emStockActual').value,
+          stockMinimo: document.getElementById('emStockMin').value,
+          ubicacion: obtenerUbicacionCompleta('em')
+        };
+        const res = await llamarAPI({ action: 'editarMaterial', mat, usuarioAct: currentUser.username });
+        if (res.success) { document.getElementById('modalEditarMaterial').classList.add('hidden'); await cargarDatos(); }
+        alert(res.message);
+      });
     }
 
     function verHistorialItem(codigo, descripcion, tipo) {
@@ -2213,34 +2256,50 @@
     }
 
     async function guardarMovimientoMaterial() {
-      const mov = {
-        codigo: document.getElementById('movMatCodigo').value,
-        tipoAccion: document.getElementById('movMatAccion').value,
-        cantidad: document.getElementById('movMatCantidad').value,
-        areaUso: document.getElementById('movMatArea').value,
-        supervisor: document.getElementById('movMatSupervisor').value.trim() || currentUser.nombre,
-        personalUsuario: document.getElementById('movMatPersonal').value.trim() || 'No especificado',
-        observaciones: document.getElementById('movMatObs').value.trim()
-      };
-      const res = await llamarAPI({ action: 'movimientoMaterial', mov, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('movMatObs').value = ''; cargarDatos(); }
+      const cantVal = Number(document.getElementById('movMatCantidad').value);
+      const tipoAccion = document.getElementById('movMatAccion').value;
+      if (isNaN(cantVal) || cantVal < 0 || (tipoAccion !== 'AJUSTE DE INVENTARIO' && cantVal <= 0)) {
+        return alert('Ingresa una cantidad válida mayor a 0.');
+      }
+      await ejecutarConBloqueo('btnMovMaterial', 'GUARDANDO MOVIMIENTO...', async () => {
+        const mov = {
+          codigo: document.getElementById('movMatCodigo').value,
+          tipoAccion: tipoAccion,
+          cantidad: cantVal,
+          areaUso: document.getElementById('movMatArea').value,
+          supervisor: document.getElementById('movMatSupervisor').value.trim() || currentUser.nombre,
+          personalUsuario: document.getElementById('movMatPersonal').value.trim() || 'No especificado',
+          observaciones: document.getElementById('movMatObs').value.trim()
+        };
+        const res = await llamarAPI({ action: 'movimientoMaterial', mov, usuarioAct: currentUser.username });
+        if (res.success) {
+          document.getElementById('movMatCantidad').value = 1;
+          document.getElementById('movMatObs').value = '';
+          await cargarDatos();
+        }
+        alert(res.message);
+      });
     }
 
     async function guardarMovimientoPatrimonio() {
-      const mov = {
-        codigo: document.getElementById('movPatCodigo').value,
-        accion: document.getElementById('movPatAccion').value,
-        estado: document.getElementById('movPatEstado').value,
-        areaUso: document.getElementById('movPatArea').value,
-        ubicacion: obtenerUbicacionPatrimonioCompleta('movPat'),
-        supervisor: document.getElementById('movPatSupervisor').value.trim() || currentUser.nombre,
-        personalUsuario: document.getElementById('movPatPersonal').value.trim() || currentUser.nombre,
-        observaciones: document.getElementById('movPatObs').value.trim()
-      };
-      const res = await llamarAPI({ action: 'movimientoPatrimonio', mov, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('movPatObs').value = ''; cargarDatos(); }
+      await ejecutarConBloqueo('btnMovPatrimonio', 'GUARDANDO USO / ESTADO...', async () => {
+        const mov = {
+          codigo: document.getElementById('movPatCodigo').value,
+          accion: document.getElementById('movPatAccion').value,
+          estado: document.getElementById('movPatEstado').value,
+          areaUso: document.getElementById('movPatArea').value,
+          ubicacion: obtenerUbicacionPatrimonioCompleta('movPat'),
+          supervisor: document.getElementById('movPatSupervisor').value.trim() || currentUser.nombre,
+          personalUsuario: document.getElementById('movPatPersonal').value.trim() || currentUser.nombre,
+          observaciones: document.getElementById('movPatObs').value.trim()
+        };
+        const res = await llamarAPI({ action: 'movimientoPatrimonio', mov, usuarioAct: currentUser.username });
+        if (res.success) {
+          document.getElementById('movPatObs').value = '';
+          await cargarDatos();
+        }
+        alert(res.message);
+      });
     }
 
     function obtenerHistorialFiltrado() {
@@ -2274,7 +2333,7 @@
         const nombreSafe = String(u[1]).replace(/'/g, "\'");
         const btnQuitar = esMiCuenta
           ? `<button disabled class="bg-gray-100 text-gray-400 px-2.5 py-1 rounded text-xs font-bold cursor-not-allowed ml-1" title="No puedes eliminar tu propia cuenta activa"><i class="fas fa-trash-can"></i></button>`
-          : `<button onclick="eliminarUsuarioCuenta('${u[0]}', '${nombreSafe}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2.5 py-1 rounded text-xs font-bold ml-1" title="Quitar cuenta definitivamente"><i class="fas fa-trash-can"></i> Quitar</button>`;
+          : `<button onclick="eliminarUsuarioCuenta('${u[0]}', '${nombreSafe}', this)" class="bg-red-100 hover:bg-red-200 text-red-700 px-2.5 py-1 rounded text-xs font-bold ml-1" title="Quitar cuenta definitivamente"><i class="fas fa-trash-can"></i> Quitar</button>`;
 
         tbody.innerHTML += `
           <tr class="hover:bg-gray-50">
@@ -2293,11 +2352,14 @@
       });
     }
 
-    async function eliminarUsuarioCuenta(username, nombre) {
+    async function eliminarUsuarioCuenta(username, nombre, btnEl) {
+      if (operacionEnCurso) return;
       if (!confirm(`¿Seguro que deseas quitar definitivamente la cuenta de "${nombre}" (${username})?\n\nSus movimientos registrados en el Kardex se conservarán intactos.`)) return;
-      const res = await llamarAPI({ action: 'eliminarUsuario', username, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) cargarDatos();
+      await ejecutarConBloqueo(btnEl, 'Quitando...', async () => {
+        const res = await llamarAPI({ action: 'eliminarUsuario', username, usuarioAct: currentUser.username });
+        if (res.success) await cargarDatos();
+        alert(res.message);
+      });
     }
 
     function abrirModalEditarUsuario(username) {
@@ -2315,18 +2377,20 @@
     }
 
     async function guardarEdicionUsuario() {
-      const u = {
-        usernameOriginal: document.getElementById('euLoginOriginal').value.trim(),
-        usernameNuevo: document.getElementById('euLoginNuevo').value.trim(),
-        nombre: document.getElementById('euNombre').value.trim(),
-        password: document.getElementById('euPassword').value.trim(),
-        rol: document.getElementById('euRol').value,
-        area: document.getElementById('euArea').value,
-        estado: document.getElementById('euEstado').value
-      };
-      const res = await llamarAPI({ action: 'editarUsuario', u, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('modalEditarUsuario').classList.add('hidden'); cargarDatos(); }
+      await ejecutarConBloqueo('btnGuardarEditUser', 'Actualizando...', async () => {
+        const u = {
+          usernameOriginal: document.getElementById('euLoginOriginal').value.trim(),
+          usernameNuevo: document.getElementById('euLoginNuevo').value.trim(),
+          nombre: document.getElementById('euNombre').value.trim(),
+          password: document.getElementById('euPassword').value.trim(),
+          rol: document.getElementById('euRol').value,
+          area: document.getElementById('euArea').value,
+          estado: document.getElementById('euEstado').value
+        };
+        const res = await llamarAPI({ action: 'editarUsuario', u, usuarioAct: currentUser.username });
+        if (res.success) { document.getElementById('modalEditarUsuario').classList.add('hidden'); await cargarDatos(); }
+        alert(res.message);
+      });
     }
 
     async function guardarNuevoUsuario() {
@@ -2338,9 +2402,16 @@
         area: document.getElementById('nuevoUserArea').value
       };
       if (!u.nombre || !u.username || u.password.length < 6) return alert('Completa los datos (clave mín 6 caracteres).');
-      const res = await llamarAPI({ action: 'crearUsuario', u, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) cargarDatos();
+      await ejecutarConBloqueo('btnCrearUsuario', 'Creando...', async () => {
+        const res = await llamarAPI({ action: 'crearUsuario', u, usuarioAct: currentUser.username });
+        if (res.success) {
+          document.getElementById('nuevoUserNombre').value = '';
+          document.getElementById('nuevoUserLogin').value = '';
+          document.getElementById('nuevoUserPass').value = '';
+          await cargarDatos();
+        }
+        alert(res.message);
+      });
     }
 
     function mostrarModalNuevoPatrimonio() {
@@ -2371,9 +2442,11 @@
         observaciones: document.getElementById('npObs').value.trim()
       };
       if (!item.codigo || !item.descripcion) return alert('Completa el código patrimonial y la descripción.');
-      const res = await llamarAPI({ action: 'registrarPatrimonio', item, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('modalNuevoPatrimonio').classList.add('hidden'); cargarDatos(); }
+      await ejecutarConBloqueo('btnCrearPat', 'Guardando...', async () => {
+        const res = await llamarAPI({ action: 'registrarPatrimonio', item, usuarioAct: currentUser.username });
+        if (res.success) { document.getElementById('modalNuevoPatrimonio').classList.add('hidden'); await cargarDatos(); }
+        alert(res.message);
+      });
     }
 
     function mostrarModalNuevoMaterial() {
@@ -2397,9 +2470,11 @@
         ubicacion: obtenerUbicacionCompleta('nm')
       };
       if (!mat.codigo || !mat.descripcion) return alert('Completa la descripción del material.');
-      const res = await llamarAPI({ action: 'registrarMaterial', mat, usuarioAct: currentUser.username });
-      alert(res.message);
-      if (res.success) { document.getElementById('modalNuevoMaterial').classList.add('hidden'); cargarDatos(); }
+      await ejecutarConBloqueo('btnCrearMat', 'Guardando...', async () => {
+        const res = await llamarAPI({ action: 'registrarMaterial', mat, usuarioAct: currentUser.username });
+        if (res.success) { document.getElementById('modalNuevoMaterial').classList.add('hidden'); await cargarDatos(); }
+        alert(res.message);
+      });
     }
 
     // =========================================================================
@@ -2531,6 +2606,13 @@
     }
 
     async function enviarFotoAlServidor(fotoData) {
+      if (operacionEnCurso) return;
+      operacionEnCurso = true;
+      const btnUrl = document.getElementById('btnUrlFoto');
+      const btnDel = document.getElementById('btnQuitarFoto');
+      if (btnUrl) btnUrl.disabled = true;
+      if (btnDel) btnDel.disabled = true;
+
       const msg = document.getElementById('fotoEstadoMsg');
       msg.className = 'text-xs text-center font-semibold text-blue-700';
       msg.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Guardando cambios...';
@@ -2547,7 +2629,7 @@
           msg.className = 'text-xs text-center font-semibold text-green-700';
           msg.innerText = res.message;
           document.getElementById('btnQuitarFoto').classList.toggle('hidden', !fotoData);
-          cargarDatos();
+          await cargarDatos();
         } else {
           msg.className = 'text-xs text-center font-semibold text-red-600';
           msg.innerText = res.message || 'No se pudo guardar la foto.';
@@ -2555,6 +2637,10 @@
       } catch (e) {
         msg.className = 'text-xs text-center font-semibold text-red-600';
         msg.innerText = 'Error de conexión al guardar la foto.';
+      } finally {
+        operacionEnCurso = false;
+        if (btnUrl) btnUrl.disabled = false;
+        if (btnDel) btnDel.disabled = false;
       }
     }
 
